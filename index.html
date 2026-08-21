@@ -341,7 +341,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.4';
+  var VERSION = '1.5';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -917,7 +917,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<h3>' + (c ? 'Editar cuenta' : 'Nueva cuenta') + '</h3>' +
       '<span class="lb">Nombre del banco</span><input class="fld" id="f-nom" placeholder="Nu, Openbank, Mifel…" value="' + esc(c ? c.nombre : '') + '">' +
       '<span class="lb">Color</span><div class="swatches" id="sw">' +
-      TEMAS.map(function (x) { return '<button class="sw' + (x.id === t ? ' on' : '') + '" data-t="' + x.id + '" style="background:' + x.css + '"></button>'; }).join('') + '</div>' +
+      TEMAS.map(function (x) { return '<button class="sw' + (x.id === t ? ' on' : '') + '" data-t="' + x.id + '" style="background:' + tema(x.id) + '"></button>'; }).join('') + '</div>' +
       '<span class="lb">Tasa anual declarada (%)</span><input class="fld" id="f-tasa" type="text" inputmode="decimal" autocomplete="off" placeholder="12.5" value="' + (c ? +(c.tasa * 100).toFixed(4) : '') + '">' +
       (c ? '' : '<span class="lb">Saldo actual</span><input class="fld" id="f-saldo" type="text" inputmode="decimal" autocomplete="off" placeholder="12500.75">') +
       '<span class="lb">Requisito para conservar la tasa</span><input class="fld" id="f-req" placeholder="Una compra al mes (opcional)" value="' + esc(c ? c.requisito : '') + '">' +
