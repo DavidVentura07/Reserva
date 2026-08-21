@@ -36,17 +36,22 @@ body{
   #app{height:min(860px,calc(100dvh - 48px));border-radius:40px;box-shadow:0 30px 70px rgba(0,0,0,.26)}
 }
 h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.4px}
-button,input,select{font:inherit}
+/* color:inherit es obligatorio: sin él, Safari en iPhone pinta el texto de todo
+   <button> con su azul de sistema. En Chrome de escritorio no se nota. */
+button,input,select{font:inherit;color:inherit}
 button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offset:2px}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 .hide{display:none!important}
 
-.view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(24px + var(--safe-top)) 20px calc(120px + var(--safe-bot));display:none}
+.view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(22px + var(--safe-top)) 20px calc(84px + var(--safe-bot));display:none}
 .view.on{display:block}
-.view.flush{padding-top:0}
+/* la vista de detalle va a sangre: la cabecera de color debe tocar los dos bordes,
+   el contenido de abajo pone su propio margen de 20px */
+.view.flush{padding:0 0 calc(84px + var(--safe-bot))}
 
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:10px}
 .date{font-size:13px;color:var(--mut);font-weight:500}
+.ver{display:block;font-style:normal;font-size:10px;color:#AFAFB5;font-weight:500;margin-top:2px;letter-spacing:.2px}
 .h-title{font-size:20px;font-weight:600;letter-spacing:-.5px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--mut);border:0;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .chip.alert{background:var(--warnbg);color:var(--warn)}
@@ -82,8 +87,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .row-card .v b{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .row-card .v span{display:block;font-size:11.5px;color:var(--mut);font-weight:500}
 
-.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:10px 6px calc(14px + var(--safe-bot));background:rgba(255,255,255,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.05);z-index:5}
-.tab{background:none;border:0;padding:6px 12px;color:#9A9AA0;cursor:pointer;font-size:10.5px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:4px}
+/* el relleno inferior es solo el área del indicador de inicio del iPhone: nada extra,
+   para no dejar una franja vacía debajo de las etiquetas */
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:7px 6px max(6px,calc(var(--safe-bot) - 10px));background:rgba(255,255,255,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.05);z-index:5}
+.tab{background:none;border:0;padding:4px 12px;color:#9A9AA0;cursor:pointer;font-size:10.5px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
 .tab.on{color:var(--ink);font-weight:600}
 .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
@@ -98,8 +105,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .two{display:flex;gap:10px;margin-top:20px}
 .two div{flex:1;background:rgba(255,255,255,.16);border-radius:14px;padding:10px 12px}
 .two span{display:block;font-size:11px;opacity:.82;font-weight:500;margin-bottom:2px}
-.two b{font-size:16px;font-weight:700}
-.two small{font-size:10.5px;opacity:.75;font-weight:500}
+.two b{font-size:16px;font-weight:700;display:block;line-height:1.25}
+.two small{font-size:10.5px;opacity:.75;font-weight:500;display:block;margin-top:2px;line-height:1.3}
 
 .seg{display:flex;background:var(--soft);border-radius:999px;padding:3px;margin-bottom:18px}
 .seg button{flex:1;border:0;background:none;font-size:13.5px;font-weight:500;color:var(--mut);padding:9px 0;border-radius:999px;cursor:pointer}
@@ -136,10 +143,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .mv .am.neg{color:var(--neg)}
 .mv .am.zero{color:var(--mut);font-weight:600}
 
-.fab{position:absolute;right:20px;bottom:calc(96px + var(--safe-bot));height:52px;padding:0 22px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:600;cursor:pointer;z-index:6;display:flex;align-items:center;gap:8px;box-shadow:0 12px 26px rgba(26,26,28,.28)}
+.fab{position:absolute;right:20px;bottom:calc(70px + var(--safe-bot));height:52px;padding:0 22px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:600;cursor:pointer;z-index:6;display:flex;align-items:center;gap:8px;box-shadow:0 12px 26px rgba(26,26,28,.28)}
 
 .empty{text-align:center;padding:60px 8px 0}
-.empty .mk{width:64px;height:64px;border-radius:22px;background:linear-gradient(135deg,#7B3FE4,#5B21B6);margin:0 auto 24px}
+.empty .mk{width:64px;height:64px;display:block;margin:0 auto 24px}
 .empty h2{font-size:22px;margin-bottom:10px}
 .empty p{font-size:14.5px;color:var(--mut);line-height:1.6;margin:0 0 32px;font-weight:500}
 .small-empty{text-align:center;color:var(--mut);font-size:13.5px;font-weight:500;padding:28px 20px;line-height:1.6}
@@ -158,10 +165,12 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .pick{flex:1;background:var(--soft);border:0;border-radius:16px;padding:11px 13px;text-align:left;cursor:pointer;min-width:0}
 .pick span{display:block;font-size:11px;color:var(--mut);font-weight:500}
 .pick b{font-size:14px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick.inerte{background:transparent;box-shadow:inset 0 0 0 1px var(--line);cursor:default}
 .fld{width:100%;background:var(--soft);border:0;border-radius:16px;padding:13px 15px;font-size:15px;margin-bottom:10px}
 .fld::placeholder{color:#A0A0A6}
 .lb{font-size:12px;color:var(--mut);font-weight:600;margin:14px 0 6px;display:block}
 .err{color:var(--neg);font-size:12.5px;font-weight:500;margin:-4px 0 10px;display:none}
+.infoline{font-size:12.5px;color:var(--mut);font-weight:500;line-height:1.6;margin:-2px 2px 14px}
 .err.on{display:block}
 .pad3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
 .pad3 button{border:0;background:var(--soft);color:var(--ink);font-size:22px;font-weight:600;padding:15px 0;border-radius:16px;cursor:pointer}
@@ -177,7 +186,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .switch button.on{background:var(--pos)}
 .switch button i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .18s}
 .switch button.on i{transform:translateX(20px)}
-.toast{position:absolute;left:20px;right:20px;bottom:calc(96px + var(--safe-bot));background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;font-weight:500;z-index:40;opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none}
+.toast{position:absolute;left:20px;right:20px;bottom:calc(70px + var(--safe-bot));background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;font-weight:500;z-index:40;opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none}
 .toast.on{opacity:1;transform:none}
 .diffbox{background:var(--soft);border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13.5px;font-weight:500;line-height:1.7}
 .diffbox div{display:flex;justify-content:space-between}
@@ -189,7 +198,15 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
   <div class="view" id="v-empty">
     <div class="empty">
-      <div class="mk"></div>
+      <svg class="mk" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><linearGradient id="mkg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B3FE4"/><stop offset="1" stop-color="#5B21B6"/>
+        </linearGradient></defs>
+        <rect width="100" height="100" rx="23" fill="url(#mkg)"/>
+        <rect x="33.6" y="21.4" width="32.9" height="14.4" rx="3.1" fill="#fff" opacity=".58"/>
+        <rect x="24.3" y="40.3" width="51.3" height="15.1" rx="3.1" fill="#fff" opacity=".72"/>
+        <rect x="15.0" y="60.0" width="70.0" height="18.6" rx="3.1" fill="#fff"/>
+      </svg>
       <h2>Tu reserva, en un solo lugar</h2>
       <p>Da de alta el primer banco donde tienes dinero guardado, o recupera un respaldo si ya usabas la app antes.</p>
       <button class="primary" data-sheet="cuenta">Agregar mi primer banco</button>
@@ -199,7 +216,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
   <div class="view" id="v-home">
     <div class="hdr">
-      <span class="date" id="today"></span>
+      <span class="date"><span id="today"></span><i class="ver" id="ver"></i></span>
       <button class="chip" id="backup-chip" data-go="ajustes"></button>
     </div>
     <div class="hero">
@@ -232,6 +249,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     <div style="padding:0 20px">
       <div class="seg" id="dseg"><button class="on">Resumen</button><button>Movimientos</button></div>
       <div id="d-resumen">
+        <div class="infoline" id="d-info"></div>
         <div class="grid">
           <div class="cell"><span>Aportado</span><b class="num" id="d-ap">$0</b></div>
           <div class="cell"><span>Retirado</span><b class="num" id="d-re">$0</b></div>
@@ -282,6 +300,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></span>
       <span class="g"><b>Importar respaldo</b><span>Reemplaza todo lo que hay en la app</span></span><span class="arw">›</span>
     </button>
+    <button class="act hide" id="a-undo">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 112.3 5.7M4 5v6h6"/></svg></span>
+      <span class="g"><b>Deshacer la última importación</b><span>Vuelve a los datos que tenías antes</span></span><span class="arw">›</span>
+    </button>
     <div class="note">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
       <div><b>Tus datos viven solo en este teléfono</b><p>No hay servidor ni cuenta. Si borras la app sin respaldar, no hay forma de recuperar el historial.</p></div>
@@ -294,7 +316,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     </button>
     <div class="eyebrow" style="margin-top:22px"><b>Preferencias</b><span></span></div>
     <div class="switch">Rendimiento en tiempo real<button id="tick-toggle"><i></i></button></div>
-    <div class="small-empty" style="padding:18px 0 0">Reserva · versión 1.1</div>
+    <div class="small-empty" style="padding:18px 0 0" id="ver-ajustes"></div>
     <input type="file" id="file-input" accept=".json,application/json" class="hide">
   </div>
 
@@ -315,6 +337,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 /* Reserva — control de ahorro en bancos digitales. Todo vive en el dispositivo. */
 (function () {
   'use strict';
+
+  /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
+     vistazo que el teléfono ya tiene la versión recién publicada.
+     Al cambiarla, subir también la versión de CACHE en sw.js. */
+  var VERSION = '1.3';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -368,7 +395,12 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     return isNaN(n) ? 0 : n;
   }
   function pct(v) { return (v * 100).toFixed(2).replace('.00', '') + '%'; }
-  function hoy() { return new Date().toISOString().slice(0, 10); }
+  /* Fecha local, no UTC: con toISOString, a partir de las 6 de la tarde en CDMX
+     la app creía que ya era el día siguiente y devengaba un día de más. */
+  function hoy(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
   function dias(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
   function fechaLarga(iso) {
     var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -380,20 +412,57 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   function $(id) { return document.getElementById(id); }
 
   /* ---------- estado ---------- */
-  var S = load() || {
-    version: 1, updatedAt: null,
-    ajustes: { ultimoRespaldo: null, tick: true },
-    cuentas: [], plazos: [], movimientos: []
-  };
-  if (!S.ajustes) S.ajustes = { ultimoRespaldo: null, tick: true };
-  if (S.ajustes.tick === undefined) S.ajustes.tick = true;
-  /* la v1 guardaba por error el valor de la animación dentro de la cuenta; se limpia al abrir */
-  var habiaBasura = false;
-  function limpiar(o) {
-    if (o && o.cuentas) o.cuentas.forEach(function (c) { if ('_vivo' in c) { delete c._vivo; habiaBasura = true; } });
+  function vacio() {
+    return { version: 1, updatedAt: null, ajustes: { ultimoRespaldo: null, tick: true }, cuentas: [], plazos: [], movimientos: [] };
+  }
+  function num(v, def) {
+    if (typeof v === 'string') v = parseNum(v);
+    return (typeof v === 'number' && isFinite(v)) ? v : (def || 0);
+  }
+  /* Repara lo que venga incompleto o corrupto: un respaldo viejo, un archivo editado
+     a mano o una cuenta a la que le falte un campo no deben dejar la app en $NaN. */
+  function normalizar(o) {
+    if (!o || typeof o !== 'object') return null;
+    o.version = 1;
+    if (!o.ajustes || typeof o.ajustes !== 'object') o.ajustes = { ultimoRespaldo: null, tick: true };
+    if (o.ajustes.tick === undefined) o.ajustes.tick = true;
+    ['cuentas', 'plazos', 'movimientos'].forEach(function (k) { if (!Array.isArray(o[k])) o[k] = []; });
+    o.cuentas.forEach(function (c) {
+      delete c._vivo;                       // la v1 guardaba aquí el valor de la animación
+      c.id = c.id || uid();
+      c.nombre = String(c.nombre == null ? 'Cuenta' : c.nombre);
+      if (!TEMAS.some(function (x) { return x.id === c.tema; })) c.tema = TEMAS[0].id;
+      c.tasa = num(c.tasa);
+      c.saldo = num(c.saldo); c.aportado = num(c.aportado); c.retirado = num(c.retirado);
+      c.rendido = num(c.rendido); c.ajustes = num(c.ajustes);
+      c.vecesRetirado = Math.max(0, Math.round(num(c.vecesRetirado)));
+      c.retieneISR = !!c.retieneISR;
+      c.requisito = c.requisito == null ? '' : String(c.requisito);
+      if (!Array.isArray(c.historialTasas)) c.historialTasas = [];
+      if (!Array.isArray(c.conciliaciones)) c.conciliaciones = [];
+      if (!c.ultimoDevengo) c.ultimoDevengo = hoy();
+      if (!c.periodo || typeof c.periodo !== 'object') c.periodo = {};
+      c.periodo.desde = c.periodo.desde || c.ultimoDevengo;
+      c.periodo.saldoInicio = num(c.periodo.saldoInicio, c.saldo);
+      c.periodo.devengado = num(c.periodo.devengado);
+    });
+    o.plazos.forEach(function (p) {
+      p.id = p.id || uid(); p.nombre = String(p.nombre == null ? 'Plazo' : p.nombre);
+      p.monto = num(p.monto); p.tasa = num(p.tasa);
+      p.inicio = p.inicio || hoy(); p.vence = p.vence || hoy();
+    });
+    o.movimientos = o.movimientos.filter(function (m) { return m && m.tipo && m.cuentaId; });
+    o.movimientos.forEach(function (m) {
+      m.id = m.id || uid(); m.monto = num(m.monto); m.fecha = m.fecha || hoy();
+      if (m.ajuste != null) m.ajuste = num(m.ajuste);
+    });
     return o;
   }
-  limpiar(S);
+
+  var crudo = load();
+  var antes = crudo ? JSON.stringify(crudo) : null;
+  var S = normalizar(crudo) || vacio();
+  var reparado = antes != null && JSON.stringify(S) !== antes;
 
   function cuenta(id) { for (var i = 0; i < S.cuentas.length; i++) if (S.cuentas[i].id === id) return S.cuentas[i]; return null; }
   function totalVista() { return S.cuentas.reduce(function (a, c) { return a + c.saldo; }, 0); }
@@ -405,10 +474,18 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     S.cuentas.forEach(function (c) {
       if (!c.ultimoDevengo) { c.ultimoDevengo = h; return; }
       var n = dias(c.ultimoDevengo, h);
-      if (n <= 0) return;
+      /* fecha futura: reloj movido o respaldo traído de otro huso. Se reancla, no se devenga. */
+      if (n < 0) { c.ultimoDevengo = h; cambio = true; return; }
+      if (n === 0) return;
       if (n > 800) n = 800;
       var i = 0, interes = 0;
-      for (; i < n; i++) { var d = c.saldo * c.tasa / 365; c.saldo += d; interes += d; }
+      for (; i < n; i++) {
+        /* se guarda el saldo de cada día para poder sacar después el saldo promedio
+           real del periodo; sin esto, un traspaso a media quincena falseaba la tasa observada */
+        c.periodo.saldoDias = (c.periodo.saldoDias || 0) + c.saldo;
+        var d = c.saldo * c.tasa / 365;
+        c.saldo += d; interes += d;
+      }
       c.rendido += interes;
       c.periodo.devengado += interes;
       c.ultimoDevengo = h;
@@ -431,22 +508,51 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     persist();
   }
 
+  /* Deshace un movimiento mal capturado. El interés que ese dinero ya generó se
+     queda donde está: la siguiente conciliación lo corrige. No aplica a conciliaciones. */
+  function revertir(m) {
+    var c = cuenta(m.cuentaId); if (!c) return false;
+    if (m.tipo === 'ingreso') { c.saldo -= m.monto; c.aportado -= m.monto; }
+    else if (m.tipo === 'retiro') { c.saldo += m.monto; c.retirado -= m.monto; c.vecesRetirado = Math.max(0, c.vecesRetirado - 1); }
+    else if (m.tipo === 'traspaso') {
+      var d = cuenta(m.destinoId); if (!d) return false;
+      c.saldo += m.monto; d.saldo -= m.monto;
+    } else return false;
+    S.movimientos = S.movimientos.filter(function (x) { return x.id !== m.id; });
+    persist();
+    return true;
+  }
+
+  /* Saldo promedio del periodo. Con el acumulado día a día es el promedio real
+     ponderado por tiempo; si son datos viejos que no lo traen, se cae al promedio
+     entre extremos, que es lo que hacía la v1. */
+  function saldoPromedio(c, saldoReal, d) {
+    if (c.periodo.saldoDias != null && d > 0) return c.periodo.saldoDias / d;
+    return (c.periodo.saldoInicio + saldoReal) / 2;
+  }
+
   function conciliar(c, saldoReal) {
     var h = hoy();
     var proyectado = c.saldo;
     var ajuste = saldoReal - proyectado;
     var d = dias(c.periodo.desde, h);
-    var obs = null;
+    var obs = null, descartada = false;
     if (d >= 7) {
-      var promedio = (c.periodo.saldoInicio + saldoReal) / 2;
-      if (promedio > 0) obs = ((c.periodo.devengado + ajuste) / promedio) * (365 / d);
+      var promedio = saldoPromedio(c, saldoReal, d);
+      if (promedio > 0) {
+        var t = ((c.periodo.devengado + ajuste) / promedio) * (365 / d);
+        /* Una tasa fuera de este rango no es una tasa: es un movimiento que se quedó
+           sin registrar. Se guarda la conciliación pero no se contamina la medición. */
+        if (t > -0.10 && t < 0.60) obs = t; else descartada = true;
+      }
     }
     c.conciliaciones.unshift({ fecha: h, saldoReal: saldoReal, proyectado: proyectado, ajuste: ajuste, dias: d, tasaObs: obs });
     c.saldo = saldoReal;
     c.ajustes = (c.ajustes || 0) + ajuste;
-    c.periodo = { desde: h, saldoInicio: saldoReal, devengado: 0 };
+    c.periodo = { desde: h, saldoInicio: saldoReal, devengado: 0, saldoDias: 0 };
     S.movimientos.unshift({ id: uid(), tipo: 'conciliacion', cuentaId: c.id, monto: saldoReal, ajuste: ajuste, fecha: h });
     persist();
+    return { dias: d, obs: obs, descartada: descartada };
   }
 
   function tasaObservada(c) {
@@ -457,14 +563,42 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   }
 
   /* ---------- respaldo ---------- */
-  function exportar(silencioso) {
-    var nombre = 'reserva-' + hoy() + '.json';
-    var blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  var KEY_PREVIO = 'reserva.v1.previo';
+
+  function descargar(texto, nombre, listo) {
+    var blob = new Blob([texto], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = nombre;
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    if (!silencioso) { S.ajustes.ultimoRespaldo = hoy(); persist(); render(); toast('Respaldo exportado'); }
+    listo();
+  }
+
+  /* En un iPhone con la app instalada, la descarga directa de un archivo se queda
+     callada y sin hacer nada. La hoja de compartir de iOS sí funciona y deja
+     guardarlo en Archivos o iCloud, así que se intenta primero. */
+  function exportar() {
+    var nombre = 'reserva-' + hoy() + '.json';
+    var texto = JSON.stringify(S, null, 2);
+    function listo() { S.ajustes.ultimoRespaldo = hoy(); persist(); render(); toast('Respaldo guardado'); }
+    try {
+      var f = new File([texto], nombre, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        navigator.share({ files: [f] }).then(listo).catch(function (e) {
+          if (e && e.name === 'AbortError') return;           // lo canceló él, no es un fallo
+          descargar(texto, nombre, listo);
+        });
+        return;
+      }
+    } catch (e) { /* sin soporte de compartir archivos: se descarga */ }
+    descargar(texto, nombre, listo);
+  }
+
+  function guardarPrevio() {
+    try { localStorage.setItem(KEY_PREVIO, JSON.stringify(S)); return true; } catch (e) { return false; }
+  }
+  function hayPrevio() {
+    try { return !!localStorage.getItem(KEY_PREVIO); } catch (e) { return false; }
   }
 
   function validar(o) {
@@ -541,6 +675,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     }).join('');
 
     $('tick-toggle').classList.toggle('on', !!S.ajustes.tick);
+    $('a-undo').classList.toggle('hide', !hayPrevio());
 
     if (detalleId) renderDetalle();
   }
@@ -572,9 +707,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     if (conCuenta) sub = nom + ' · ' + sub;
     if (m.motivo) sub += ' · ' + m.motivo;
     if (m.tipo === 'conciliacion') sub += ' · ajuste ' + (m.ajuste >= 0 ? '+' : '−') + moneySmart(Math.abs(m.ajuste));
-    return '<div class="mv"><span class="ic"><svg viewBox="0 0 24 24">' + ICONOS[m.tipo] + '</svg></span>' +
+    return '<button class="mv" data-mov="' + m.id + '"><span class="ic"><svg viewBox="0 0 24 24">' + ICONOS[m.tipo] + '</svg></span>' +
       '<span class="g"><b>' + esc(tit) + '</b><span>' + esc(sub) + '</span></span>' +
-      '<span class="am ' + cls + ' num">' + am + '</span></div>';
+      '<span class="am ' + cls + ' num">' + am + '</span></button>';
   }
 
   function renderDetalle() {
@@ -585,13 +720,22 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('d-tasa').textContent = pct(c.tasa);
     var o = tasaObservada(c);
     $('d-obs').textContent = o ? pct(o.tasa) : '—';
-    $('d-obs-note').textContent = o ? 'estimada · ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : 'concilia para calcularla';
+    $('d-obs-note').textContent = o ? 'estimada · ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : 'concilia para verla';
     $('d-ap').textContent = money(c.aportado);
     $('d-re').textContent = money(c.retirado);
     $('d-rd').textContent = '+' + money(c.rendido);
     $('d-vr').textContent = c.vecesRetirado;
-    var uc = c.conciliaciones[0];
-    $('d-conc-sub').textContent = uc ? 'Última hace ' + dias(uc.fecha, hoy()) + ' días' : 'Nunca conciliada';
+    /* el ISR nunca entra al cálculo, pero sí debe estar a la vista en la ficha */
+    var info = [c.retieneISR ? 'Retiene ISR' : 'Sin retención de ISR'];
+    var cambio = c.historialTasas.filter(function (x) { return x.de != null; })[0];
+    info.push(cambio
+      ? 'tasa modificada el ' + fechaLarga(cambio.fecha) + ', de ' + pct(cambio.de) + ' a ' + pct(cambio.a)
+      : 'tasa sin cambios desde el alta');
+    $('d-info').textContent = info.join(' · ');
+
+    var uc = c.conciliaciones[0], ud = uc ? dias(uc.fecha, hoy()) : null;
+    $('d-conc-sub').textContent = !uc ? 'Nunca conciliada'
+      : ud === 0 ? 'Conciliada hoy' : ud === 1 ? 'Última hace un día' : 'Última hace ' + ud + ' días';
     $('d-req').classList.toggle('hide', !c.requisito);
     $('d-req-tx').textContent = c.requisito || '';
     var ms = S.movimientos.filter(function (m) { return m.cuentaId === c.id || m.destinoId === c.id; });
@@ -645,7 +789,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     destino = destino ? destino.id : null;
 
     abrir(
-      '<div class="seg" id="kind"><button class="on">Ingreso</button><button>Retiro</button><button>Traspaso</button></div>' +
+      '<div class="seg" id="kind"><button class="on">Ingreso</button><button>Retiro</button>' +
+      (S.cuentas.length > 1 ? '<button>Traspaso</button>' : '') + '</div>' +
       '<div class="entry"><div class="v num" id="val"><span class="sym">$</span>0</div></div>' +
       '<div class="picks">' +
       '<button class="pick" id="p1"><span id="p1l">Cuenta</span><b id="p1v"></b></button>' +
@@ -662,6 +807,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       $('p1l').textContent = tipo === 'traspaso' ? 'Origen' : 'Cuenta';
       $('p2l').textContent = tipo === 'traspaso' ? 'Destino' : 'Fecha';
       $('p2v').textContent = tipo === 'traspaso' ? (destino ? cuenta(destino).nombre : 'Elige') : 'Hoy';
+      /* la fecha siempre es hoy: no debe parecer que se puede tocar */
+      $('p2').classList.toggle('inerte', tipo !== 'traspaso');
+      $('p1').classList.toggle('inerte', S.cuentas.length < 2);
       $('motivo').classList.toggle('hide', tipo !== 'retiro');
     }
     pintar();
@@ -698,25 +846,39 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
   function hojaConciliar() {
     var c = cuenta(detalleId); if (!c) return;
-    var real = 0;
+    var real = 0, tecleado = '';
+    var d = dias(c.periodo.desde, hoy());
     abrir(
       '<h3>Conciliar ' + esc(c.nombre) + '</h3>' +
       '<div class="diffbox"><div><span>Saldo proyectado</span><b class="num">' + moneySmart(c.saldo) + '</b></div>' +
-      '<div><span>Diferencia</span><b class="num" id="dif">$0</b></div></div>' +
+      '<div><span>Diferencia</span><b class="num" id="dif">$0</b></div>' +
+      '<div><span>Periodo</span><b>' + (d === 0 ? 'Hoy mismo' : d === 1 ? 'Un día' : d + ' días') + '</b></div></div>' +
+      (d < 7 ? '<div class="note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
+        '<div><b>Aún no sale la tasa real</b><p>Hacen falta al menos siete días desde la conciliación anterior para deducirla. El saldo sí se corrige.</p></div></div>' : '') +
       '<div class="entry"><div class="v num" id="val"><span class="sym">$</span>0</div>' +
       '<div class="hint">Captura el saldo exacto que ves en el banco, con centavos</div></div>' +
+      '<div class="note hide" id="aviso"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
+      '<div><b>Esa diferencia es muy grande</b><p id="aviso-tx"></p></div></div>' +
       tecladoHTML() +
       '<button class="primary" id="save">Guardar saldo real</button>'
     );
     conectarTeclado(function (v, b) {
-      real = v;
+      real = v; tecleado = b;
       $('val').innerHTML = '<span class="sym">$</span>' + bufHTML(b);
-      var d = v - c.saldo;
-      $('dif').textContent = (d >= 0 ? '+' : '−') + moneySmart(Math.abs(d));
+      var dif = v - c.saldo;
+      $('dif').textContent = (dif >= 0 ? '+' : '−') + moneySmart(Math.abs(dif));
+      /* una diferencia así casi nunca es rendimiento: es un depósito o retiro sin capturar */
+      var raro = b !== '' && Math.abs(dif) > 100 && Math.abs(dif) > c.saldo * 0.02;
+      $('aviso').classList.toggle('hide', !raro);
+      if (raro) $('aviso-tx').textContent = 'Suele significar que falta capturar un ' +
+        (dif > 0 ? 'depósito' : 'retiro') + ' de alrededor de ' + moneySmart(Math.abs(dif)) +
+        '. Si es así, cancela, registra el movimiento y vuelve a conciliar: la tasa real te saldrá bien.';
     });
     $('save').addEventListener('click', function () {
-      if (!real) { toast('Escribe el saldo que ves en el banco'); return; }
-      conciliar(c, real); cerrar(); render(); toast('Saldo conciliado');
+      if (tecleado === '') { toast('Escribe el saldo que ves en el banco'); return; }
+      var r = conciliar(c, real); cerrar(); render();
+      toast(r.descartada ? 'Saldo corregido, pero el ajuste era muy grande para deducir la tasa'
+        : r.obs != null ? 'Conciliado · tasa real ' + pct(r.obs) : 'Saldo conciliado');
     });
   }
 
@@ -775,27 +937,81 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     });
   }
 
-  function hojaPlazo() {
+  function plazo(id) { for (var i = 0; i < S.plazos.length; i++) if (S.plazos[i].id === id) return S.plazos[i]; return null; }
+  /* interés simple del plazo completo: la tasa se pacta al contratar y no cambia */
+  function alVencimiento(p) { return p.monto + p.monto * p.tasa * Math.max(0, dias(p.inicio, p.vence)) / 365; }
+
+  function hojaPlazo(id) {
+    var p = id ? plazo(id) : null;
     abrir(
-      '<h3>Nuevo instrumento a plazo</h3>' +
-      '<span class="lb">Nombre</span><input class="fld" id="p-nom" placeholder="Cetes 91 días">' +
-      '<span class="lb">Monto invertido</span><input class="fld" id="p-monto" type="text" inputmode="decimal" autocomplete="off" placeholder="28480.50">' +
-      '<span class="lb">Tasa anual (%)</span><input class="fld" id="p-tasa" type="text" inputmode="decimal" autocomplete="off" placeholder="9.4">' +
-      '<span class="lb">Fecha de vencimiento</span><input class="fld" id="p-vence" type="date">' +
-      '<button class="primary" id="save">Agregar</button>'
+      '<h3>' + (p ? 'Editar plazo' : 'Nuevo instrumento a plazo') + '</h3>' +
+      (p ? '<div class="diffbox"><div><span>Al vencimiento recibirás</span><b class="num">' + moneySmart(alVencimiento(p)) + '</b></div>' +
+        '<div><span>Rendimiento</span><b class="num pos">+' + moneySmart(alVencimiento(p) - p.monto) + '</b></div></div>' : '') +
+      '<span class="lb">Nombre</span><input class="fld" id="p-nom" placeholder="Cetes 91 días" value="' + esc(p ? p.nombre : '') + '">' +
+      '<span class="lb">Monto invertido</span><input class="fld" id="p-monto" type="text" inputmode="decimal" autocomplete="off" placeholder="28480.50" value="' + (p ? p.monto : '') + '">' +
+      '<span class="lb">Tasa anual (%)</span><input class="fld" id="p-tasa" type="text" inputmode="decimal" autocomplete="off" placeholder="9.4" value="' + (p ? +(p.tasa * 100).toFixed(4) : '') + '">' +
+      '<span class="lb">Fecha de vencimiento</span><input class="fld" id="p-vence" type="date" value="' + esc(p ? p.vence : '') + '">' +
+      '<button class="primary" id="save">' + (p ? 'Guardar cambios' : 'Agregar') + '</button>' +
+      (p ? '<button class="secondary" id="p-del" style="color:#BA1A1A">Eliminar plazo</button>' : '')
     );
+    if (p) $('p-del').addEventListener('click', function () {
+      abrir('<h3>¿Eliminar ' + esc(p.nombre) + '?</h3><div class="diffbox">Deja de contar en tu patrimonio. No afecta a tus cuentas a la vista.</div>' +
+        '<button class="primary warn" id="ok">Sí, eliminar</button><button class="secondary" id="no">Cancelar</button>');
+      $('no').addEventListener('click', cerrar);
+      $('ok').addEventListener('click', function () {
+        S.plazos = S.plazos.filter(function (x) { return x.id !== p.id; });
+        persist(); cerrar(); render(); toast('Plazo eliminado');
+      });
+    });
     $('save').addEventListener('click', function () {
       var nom = $('p-nom').value.trim(), monto = parseNum($('p-monto').value);
       var tasaRaw = $('p-tasa').value.trim();
       var tasa = parseNum(tasaRaw) / 100, vence = $('p-vence').value;
       if (!nom || !monto || !tasaRaw || !(tasa >= 0) || !vence) { toast('Completa todos los campos'); return; }
-      S.plazos.push({ id: uid(), nombre: nom, monto: monto, tasa: tasa, inicio: hoy(), vence: vence });
-      persist(); cerrar(); render(); toast('Instrumento agregado');
+      if (p) { p.nombre = nom; p.monto = monto; p.tasa = tasa; p.vence = vence; }
+      else S.plazos.push({ id: uid(), nombre: nom, monto: monto, tasa: tasa, inicio: hoy(), vence: vence });
+      persist(); cerrar(); render(); toast(p ? 'Plazo actualizado' : 'Instrumento agregado');
+    });
+  }
+
+  function hojaMovimientoDetalle(id) {
+    var m = null;
+    for (var i = 0; i < S.movimientos.length; i++) if (S.movimientos[i].id === id) m = S.movimientos[i];
+    if (!m) return;
+    var c = cuenta(m.cuentaId), dst = m.destinoId ? cuenta(m.destinoId) : null;
+    var tit = { ingreso: 'Ingreso', retiro: 'Retiro', traspaso: 'Traspaso', conciliacion: 'Conciliación' }[m.tipo];
+    abrir(
+      '<h3>' + tit + '</h3>' +
+      '<div class="diffbox">' +
+      '<div><span>' + (m.tipo === 'conciliacion' ? 'Saldo capturado' : 'Monto') + '</span><b class="num">' + moneySmart(m.monto) + '</b></div>' +
+      '<div><span>' + (m.tipo === 'traspaso' ? 'Origen' : 'Cuenta') + '</span><b>' + esc(c ? c.nombre : 'Cuenta eliminada') + '</b></div>' +
+      (dst ? '<div><span>Destino</span><b>' + esc(dst.nombre) + '</b></div>' : '') +
+      '<div><span>Fecha</span><b>' + fechaLarga(m.fecha) + '</b></div>' +
+      (m.ajuste != null ? '<div><span>Ajuste</span><b class="num">' + (m.ajuste >= 0 ? '+' : '−') + moneySmart(Math.abs(m.ajuste)) + '</b></div>' : '') +
+      '</div>' +
+      (m.motivo ? '<div class="infoline" style="margin:-4px 2px 14px">Motivo: ' + esc(m.motivo) + '</div>' : '') +
+      (m.tipo === 'conciliacion'
+        ? '<div class="note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
+        '<div><b>Una conciliación no se deshace</b><p>Si el saldo quedó mal, vuelve a conciliar con la cifra correcta: eso corrige el saldo y deja el rastro de las dos capturas.</p></div></div>'
+        : '<button class="secondary" id="m-del" style="color:#BA1A1A">Eliminar movimiento</button>') +
+      '<button class="secondary" id="m-no">Cerrar</button>'
+    );
+    $('m-no').addEventListener('click', cerrar);
+    if (m.tipo !== 'conciliacion') $('m-del').addEventListener('click', function () {
+      abrir('<h3>¿Eliminar este ' + tit.toLowerCase() + '?</h3>' +
+        '<div class="diffbox">Se revierte del saldo de ' + esc(c ? c.nombre : '—') + (dst ? ' y de ' + esc(dst.nombre) : '') + '. ' +
+        'El interés que ese dinero ya generó se queda; la siguiente conciliación lo cuadra.</div>' +
+        '<button class="primary warn" id="ok">Sí, eliminar</button><button class="secondary" id="no">Cancelar</button>');
+      $('no').addEventListener('click', cerrar);
+      $('ok').addEventListener('click', function () {
+        if (!revertir(m)) { toast('No se pudo eliminar: falta una de las cuentas'); cerrar(); return; }
+        cerrar(); render(); toast('Movimiento eliminado');
+      });
     });
   }
 
   function hojaImportar(datos, nombreArchivo) {
-    var tv = datos.cuentas.reduce(function (a, c) { return a + (c.saldo || 0); }, 0);
+    var tv = datos.cuentas.reduce(function (a, c) { return a + num(c.saldo); }, 0);
     abrir(
       '<h3>Importar respaldo</h3>' +
       '<div class="diffbox">' +
@@ -805,15 +1021,15 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<div><span>Movimientos</span><b>' + datos.movimientos.length + '</b></div>' +
       '<div><span>Saldo total</span><b class="num">' + money(tv) + '</b></div></div>' +
       '<div class="note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
-      '<div><b>Esto reemplaza todo</b><p>Antes de sustituir, la app descarga una copia de seguridad de lo que tienes ahora.</p></div></div>' +
+      '<div><b>Esto reemplaza todo</b><p>Lo que tienes ahora se guarda aparte en el teléfono. Si el archivo era el equivocado, en Ajustes puedes deshacer la importación.</p></div></div>' +
       '<button class="primary warn" id="ok">Reemplazar mis datos</button><button class="secondary" id="no">Cancelar</button>'
     );
     $('no').addEventListener('click', cerrar);
     $('ok').addEventListener('click', function () {
-      if (S.cuentas.length || S.movimientos.length) exportar(true);
-      S = limpiar(datos);
-      if (!S.ajustes) S.ajustes = { ultimoRespaldo: hoy(), tick: true };
-      detalleId = null; persist(); devengar(); cerrar(); go('home'); render(); toast('Respaldo restaurado');
+      var salvado = (S.cuentas.length || S.movimientos.length) ? guardarPrevio() : true;
+      S = normalizar(datos) || vacio();
+      detalleId = null; persist(); devengar(); cerrar(); go('home'); render();
+      toast(salvado ? 'Respaldo restaurado' : 'Restaurado, pero no se pudo guardar la copia anterior');
     });
   }
 
@@ -831,6 +1047,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     if (c) { detalleId = c.dataset.cuenta; go('detail'); renderDetalle(); return; }
     var ed = e.target.closest('[data-editar]');
     if (ed) { hojaCuenta(ed.dataset.editar); return; }
+    var mv = e.target.closest('[data-mov]');
+    if (mv) { hojaMovimientoDetalle(mv.dataset.mov); return; }
+    var pz = e.target.closest('[data-plazo]');
+    if (pz) { hojaPlazo(pz.dataset.plazo); return; }
   });
 
   $('dseg').addEventListener('click', function (e) {
@@ -842,8 +1062,25 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   });
   $('d-conc').addEventListener('click', hojaConciliar);
   $('d-edit').addEventListener('click', function () { hojaCuenta(detalleId); });
-  $('a-export').addEventListener('click', function () { exportar(false); });
+  $('a-export').addEventListener('click', function () { exportar(); });
   $('a-import').addEventListener('click', function () { $('file-input').click(); });
+  $('a-undo').addEventListener('click', function () {
+    var previo;
+    try { previo = JSON.parse(localStorage.getItem(KEY_PREVIO)); } catch (e) { previo = null; }
+    if (!validar(previo)) { toast('Ya no hay copia anterior guardada'); return; }
+    abrir('<h3>¿Volver a tus datos anteriores?</h3>' +
+      '<div class="diffbox"><div><span>Cuentas</span><b>' + previo.cuentas.length + '</b></div>' +
+      '<div><span>Movimientos</span><b>' + previo.movimientos.length + '</b></div>' +
+      '<div><span>Saldo total</span><b class="num">' + money(previo.cuentas.reduce(function (a, c) { return a + num(c.saldo); }, 0)) + '</b></div></div>' +
+      '<p style="font-size:13px;color:var(--mut);line-height:1.5;margin:0 0 16px">Se descarta lo que importaste y regresa lo que tenías antes de importar.</p>' +
+      '<button class="primary warn" id="ok">Sí, volver atrás</button><button class="secondary" id="no">Cancelar</button>');
+    $('no').addEventListener('click', cerrar);
+    $('ok').addEventListener('click', function () {
+      S = normalizar(previo) || vacio();
+      try { localStorage.removeItem(KEY_PREVIO); } catch (e) { }
+      detalleId = null; persist(); devengar(); cerrar(); go('home'); render(); toast('Datos anteriores restaurados');
+    });
+  });
   $('empty-import').addEventListener('click', function () { $('file-input').click(); });
   $('file-input').addEventListener('change', function (e) {
     var f = e.target.files[0]; if (!f) return;
@@ -882,7 +1119,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(tick, 150);
 
   /* ---------- arranque ---------- */
-  if (habiaBasura) persist();
+  $('ver').textContent = 'v' + VERSION;
+  $('ver-ajustes').textContent = 'Reserva · versión ' + VERSION;
+  if (reparado) persist();
   devengar();
   render();
   if (S.cuentas.length || S.plazos.length) go('home');
