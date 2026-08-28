@@ -10,10 +10,14 @@
 <title>Reserva</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* Hanken Grotesk (subconjunto latino) servida desde el propio repositorio.
+   Antes venía de fonts.googleapis.com: esa hoja de estilo externa bloquea el
+   pintado, y sin señal (el Metro) la pantalla se quedaba en blanco esperándola. */
+@font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(./hanken-grotesk-latin.woff2) format('woff2')}
+@font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url(./hanken-grotesk-latin.woff2) format('woff2')}
+@font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(./hanken-grotesk-latin.woff2) format('woff2')}
+@font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(./hanken-grotesk-latin.woff2) format('woff2')}
 :root{
   --bg:#F8F9FA; --card:#FFFFFF; --ink:#1A1A1C; --mut:#636366; --soft:#F3F4F5;
   --line:#E7E8E9; --pos:#1FA855; --neg:#BA1A1A; --warn:#A96B14; --warnbg:#FFF8EC;
@@ -58,11 +62,18 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .chip svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 .hero{text-align:center;margin-bottom:30px}
-.hero .lbl{font-size:13.5px;color:var(--mut);font-weight:500;margin-bottom:7px}
+.hero .lbl{font-size:13.5px;color:var(--mut);font-weight:500;margin-bottom:7px;display:flex;align-items:center;justify-content:center;gap:7px}
 .hero .big{font-size:42px;font-weight:700;letter-spacing:-1.2px;line-height:1}
 .hero .big .sym{font-size:.55em;font-weight:500;margin-right:2px;vertical-align:.12em}
 .hero .big .cts{font-size:.5em;color:var(--mut);font-weight:600}
 .hero .sub{font-size:13px;color:var(--mut);margin-top:9px;font-weight:500}
+/* Los puntos que tapan las cantidades se dibujan, no se escriben: el carácter •
+   no tiene glifo en todos los tamaños de la tipografía y salía como un cuadro.
+   El margen izquierdo es el aire que separa los puntos del signo de pesos. */
+.pts{display:inline-flex;align-items:center;vertical-align:middle}
+.pts i{display:block;width:var(--d);height:var(--d);border-radius:50%;background:currentColor}
+.ojo{background:none;border:0;padding:2px;cursor:pointer;color:#9A9AA0;display:flex;line-height:0}
+.ojo svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 .eyebrow{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 12px}
 .eyebrow b{font-size:14px;font-weight:600}
@@ -189,6 +200,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .toast{position:absolute;left:20px;right:20px;bottom:calc(70px + var(--safe-bot));background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;font-weight:500;z-index:40;opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none}
 .toast.on{opacity:1;transform:none}
 .diffbox{background:var(--soft);border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13.5px;font-weight:500;line-height:1.7}
+/* Aviso discreto: cambia el color de una línea, nunca su alto. Un recuadro que
+   aparece y desaparece mientras se teclea mueve el teclado bajo el dedo. */
+.quiet{font-size:11.5px;color:var(--mut);font-weight:500;line-height:1.5;margin:-4px 2px 16px}
+#dif.alto{color:var(--warn)}
+#dif .marca{font-size:11.5px;font-weight:600;margin-left:7px;color:var(--warn)}
 .diffbox div{display:flex;justify-content:space-between}
 .diffbox span{color:var(--mut)}
 </style>
@@ -220,7 +236,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <button class="chip" id="backup-chip" data-go="ajustes"></button>
     </div>
     <div class="hero">
-      <div class="lbl">Disponible hoy</div>
+      <div class="lbl">Disponible hoy<button class="ojo" id="ojo" aria-label="Mostrar u ocultar las cantidades"></button></div>
       <div class="big num" id="hero">$0<span class="cts">.00</span></div>
       <div class="sub num" id="hero-sub"></div>
     </div>
@@ -316,6 +332,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     </button>
     <div class="eyebrow" style="margin-top:22px"><b>Preferencias</b><span></span></div>
     <div class="switch">Rendimiento en tiempo real<button id="tick-toggle"><i></i></button></div>
+    <div class="switch">Ocultar las cantidades al abrir<button id="priv-toggle"><i></i></button></div>
     <div class="small-empty" style="padding:18px 0 0" id="ver-ajustes"></div>
     <input type="file" id="file-input" accept=".json,application/json" class="hide">
   </div>
@@ -341,7 +358,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.5';
+  var VERSION = '1.8';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -385,6 +402,19 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
      sistema: el degradado va en diagonal, así que tomar la esquina dejaría un escalón
      visible del lado derecho. Con el punto medio el empalme no se nota por ningún lado. */
   function temaBarra(id) { var t = temaObj(id); return mezcla(t.a, t.b, 0.3); }
+
+  /* La franja del sistema sólo admite un color plano —iOS no pinta degradados ahí—
+     pero la cabecera de abajo es un degradado en diagonal: su borde superior va del
+     tono claro en la izquierda al oscuro en la derecha. Ningún plano empalma con todo
+     ese borde a la vez, y por eso se veía una línea recta de frontera. La cabecera
+     arranca ahora con ese mismo plano y se disuelve en el degradado en 26px (el hueco
+     que hay encima de la fila de navegación): en la costura los dos lados son
+     idénticos, así que la frontera desaparece sin tocar el degradado de las tarjetas. */
+  function temaDetalle(id) {
+    var c = temaBarra(id);
+    var n = [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+    return 'linear-gradient(180deg,' + c + ' 0px,rgba(' + n.join(',') + ',0) 26px),' + tema(id);
+  }
 
   /* La franja del reloj y la señal no es parte de la página: iOS la pinta con el color
      de fondo del documento. Cambiándolo se tiñe del color del banco que estás viendo. */
@@ -450,6 +480,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     o.version = 1;
     if (!o.ajustes || typeof o.ajustes !== 'object') o.ajustes = { ultimoRespaldo: null, tick: true };
     if (o.ajustes.tick === undefined) o.ajustes.tick = true;
+    if (o.ajustes.privado === undefined) o.ajustes.privado = true;
     ['cuentas', 'plazos', 'movimientos'].forEach(function (k) { if (!Array.isArray(o[k])) o[k] = []; });
     o.cuentas.forEach(function (c) {
       delete c._vivo;                       // la v1 guardaba aquí el valor de la animación
@@ -651,6 +682,20 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     clearTimeout(t._t); t._t = setTimeout(function () { t.classList.remove('on'); }, 2600);
   }
 
+  /* ---------- discreción ----------
+     `oculto` vive fuera del estado a propósito: nunca se guarda ni se exporta, así
+     que la app siempre abre tapada. Se vuelve a tapar sola al regresar de segundo
+     plano. El interruptor de Ajustes (`privado`) es lo único que sí se guarda. */
+  var oculto = true;
+  function tapar() { return !!S.ajustes.privado && oculto; }
+  function pts(n, d, gap, izq) {
+    var s = '<span class="pts" style="--d:' + d + ';gap:' + gap + (izq ? ';margin-left:' + izq : '') + '">';
+    for (var i = 0; i < n; i++) s += '<i></i>';
+    return s + '</span>';
+  }
+  var OJO = '<svg viewBox="0 0 24 24"><path d="M2 12s3.7-6.6 10-6.6S22 12 22 12s-3.7 6.6-10 6.6S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>';
+  var OJO_X = OJO.replace('</svg>', '<path d="M4 20L20 4"/></svg>');
+
   /* ---------- render ---------- */
   var vivos = {};
   function render() {
@@ -670,24 +715,28 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('backup-when').textContent = ur == null ? 'Nunca' : nd === 0 ? 'Hoy' : 'Hace ' + nd + (nd === 1 ? ' día' : ' días');
 
     var tv = totalVista(), tp = totalPlazo();
-    $('hero').innerHTML = moneyCents(tv, true);
-    $('hero-sub').textContent = 'Patrimonio total ' + money(tv + tp) + (tp > 0 ? ' · ' + money(tp) + ' a plazo' : '');
+    var tap = tapar();
+    $('ojo').classList.toggle('hide', !S.ajustes.privado);
+    $('ojo').innerHTML = tap ? OJO : OJO_X;
+    $('hero').innerHTML = tap ? '<span class="sym">$</span>' + pts(6, '12px', '9px', '8px') : moneyCents(tv, true);
+    $('hero-sub').innerHTML = tap ? 'Patrimonio total ' + pts(6, '5px', '3.5px')
+      : 'Patrimonio total ' + money(tv + tp) + (tp > 0 ? ' · ' + money(tp) + ' a plazo' : '');
     $('count-vista').textContent = S.cuentas.length + (S.cuentas.length === 1 ? ' cuenta' : ' cuentas');
 
     $('list-vista').innerHTML = S.cuentas.length ? S.cuentas.map(function (c) {
       return '<button class="bank" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
         '<div class="top"><span class="nm">' + esc(c.nombre) + '</span><span class="tag">' + pct(c.tasa) + ' tasa</span></div>' +
-        '<div class="bal num" data-live="' + c.id + '">' + moneyCents(c.saldo) + '</div>' +
-        '<div class="foot"><span>Rendido ' + money(c.rendido) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
+        '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(6, '8px', '6px', '7px') : moneyCents(c.saldo)) + '</div>' +
+        '<div class="foot"><span>Rendido ' + (tap ? pts(4, '4px', '3px') : money(c.rendido)) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
         '</button>';
     }).join('') : '<div class="small-empty">Todavía no has agregado ninguna cuenta a la vista.</div>';
 
     $('plazo-block').classList.toggle('hide', !S.plazos.length);
-    $('list-plazo-home').innerHTML = S.plazos.map(filaPlazo).join('');
+    $('list-plazo-home').innerHTML = S.plazos.map(function (p) { return filaPlazo(p, tap); }).join('');
 
     $('plazo-total').innerHTML = moneyCents(tp, true);
     $('plazo-count').textContent = S.plazos.length ? S.plazos.length + (S.plazos.length === 1 ? ' instrumento activo' : ' instrumentos activos') : 'Sin instrumentos activos';
-    $('list-plazos').innerHTML = S.plazos.length ? S.plazos.map(filaPlazo).join('') : '<div class="small-empty">Aquí van CETES o pagarés a plazo. Este dinero no se suma a lo disponible.</div>';
+    $('list-plazos').innerHTML = S.plazos.length ? S.plazos.map(function (p) { return filaPlazo(p, false); }).join('') : '<div class="small-empty">Aquí van CETES o pagarés a plazo. Este dinero no se suma a lo disponible.</div>';
 
     $('movs-count').textContent = S.movimientos.length + (S.movimientos.length === 1 ? ' registro' : ' registros');
     $('list-movs').innerHTML = S.movimientos.length ? S.movimientos.slice(0, 120).map(function (m) { return filaMov(m, true); }).join('') : '<div class="small-empty">Sin movimientos todavía.</div>';
@@ -701,17 +750,20 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     }).join('');
 
     $('tick-toggle').classList.toggle('on', !!S.ajustes.tick);
+    $('priv-toggle').classList.toggle('on', !!S.ajustes.privado);
     $('a-undo').classList.toggle('hide', !hayPrevio());
 
     if (detalleId) renderDetalle();
   }
 
-  function filaPlazo(p) {
+  /* `tap` sólo lo manda la pantalla principal: la pestaña de Plazos siempre
+     enseña las cifras, porque llegar ahí ya es una decisión del usuario. */
+  function filaPlazo(p, tap) {
     var dv = dias(hoy(), p.vence);
     return '<button class="row-card" data-plazo="' + p.id + '">' +
       '<span class="mark" style="background:' + tema('pizarra') + '"></span>' +
       '<span class="g"><b>' + esc(p.nombre) + '</b><span>' + (dv > 0 ? 'Vence en ' + dv + (dv === 1 ? ' día' : ' días') : 'Vencido') + ' · ' + pct(p.tasa) + '</span></span>' +
-      '<span class="v"><b class="num">' + moneySmart(p.monto) + '</b><span>' + fechaLarga(p.vence) + '</span></span>' +
+      '<span class="v"><b class="num">' + (tap ? '$' + pts(5, '6px', '4px', '5px') : moneySmart(p.monto)) + '</b><span>' + fechaLarga(p.vence) + '</span></span>' +
       '</button>';
   }
 
@@ -740,7 +792,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
   function renderDetalle() {
     var c = cuenta(detalleId); if (!c) { go('home'); return; }
-    $('dtop').style.background = tema(c.tema);
+    $('dtop').style.background = temaDetalle(c.tema);
     $('dname').textContent = c.nombre;
     $('dbal').innerHTML = moneyCents(c.saldo);
     $('d-tasa').textContent = pct(c.tasa);
@@ -881,32 +933,50 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<div class="diffbox"><div><span>Saldo proyectado</span><b class="num">' + moneySmart(c.saldo) + '</b></div>' +
       '<div><span>Diferencia</span><b class="num" id="dif">$0</b></div>' +
       '<div><span>Periodo</span><b>' + (d === 0 ? 'Hoy mismo' : d === 1 ? 'Un día' : d + ' días') + '</b></div></div>' +
-      (d < 7 ? '<div class="note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
-        '<div><b>Aún no sale la tasa real</b><p>Hacen falta al menos siete días desde la conciliación anterior para deducirla. El saldo sí se corrige.</p></div></div>' : '') +
+      (d < 7 ? '<div class="quiet">Aún no sale la tasa real: hacen falta al menos siete días desde la conciliación anterior. El saldo sí se corrige.</div>' : '') +
       '<div class="entry"><div class="v num" id="val"><span class="sym">$</span>0</div>' +
       '<div class="hint">Captura el saldo exacto que ves en el banco, con centavos</div></div>' +
-      '<div class="note hide" id="aviso"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
+      /* El teclado nunca se saca del documento, sólo se esconde: así conserva lo
+         tecleado si vuelve de la confirmación, y nada cambia de alto al escribir. */
+      '<div id="zona">' + tecladoHTML() + '<button class="primary" id="save">Guardar saldo real</button></div>' +
+      '<div id="confirma" class="hide">' +
+      '<div class="note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
       '<div><b>Esa diferencia es muy grande</b><p id="aviso-tx"></p></div></div>' +
-      tecladoHTML() +
-      '<button class="primary" id="save">Guardar saldo real</button>'
+      '<button class="primary warn" id="conf-si">Guardar de todos modos</button>' +
+      '<button class="secondary" id="conf-no">Volver a revisar la cifra</button></div>'
     );
+    /* una diferencia así casi nunca es rendimiento: es un depósito o retiro sin capturar */
+    function esRaro(dif, b) { return b !== '' && Math.abs(dif) > 100 && Math.abs(dif) > c.saldo * 0.02; }
+
     conectarTeclado(function (v, b) {
       real = v; tecleado = b;
       $('val').innerHTML = '<span class="sym">$</span>' + bufHTML(b);
-      var dif = v - c.saldo;
-      $('dif').textContent = (dif >= 0 ? '+' : '−') + moneySmart(Math.abs(dif));
-      /* una diferencia así casi nunca es rendimiento: es un depósito o retiro sin capturar */
-      var raro = b !== '' && Math.abs(dif) > 100 && Math.abs(dif) > c.saldo * 0.02;
-      $('aviso').classList.toggle('hide', !raro);
-      if (raro) $('aviso-tx').textContent = 'Suele significar que falta capturar un ' +
-        (dif > 0 ? 'depósito' : 'retiro') + ' de alrededor de ' + moneySmart(Math.abs(dif)) +
-        '. Si es así, cancela, registra el movimiento y vuelve a conciliar: la tasa real te saldrá bien.';
+      var dif = v - c.saldo, raro = esRaro(dif, b);
+      /* el aviso en vivo es sólo color: si fuera un recuadro empujaría el teclado */
+      $('dif').innerHTML = (b === '' ? '$0' : (dif >= 0 ? '+' : '−') + moneySmart(Math.abs(dif))) +
+        (raro ? '<span class="marca">inusual</span>' : '');
+      $('dif').classList.toggle('alto', raro);
     });
-    $('save').addEventListener('click', function () {
-      if (tecleado === '') { toast('Escribe el saldo que ves en el banco'); return; }
+
+    function guardar() {
       var r = conciliar(c, real); cerrar(); render();
       toast(r.descartada ? 'Saldo corregido, pero el ajuste era muy grande para deducir la tasa'
         : r.obs != null ? 'Conciliado · tasa real ' + pct(r.obs) : 'Saldo conciliado');
+    }
+    $('save').addEventListener('click', function () {
+      if (tecleado === '') { toast('Escribe el saldo que ves en el banco'); return; }
+      var dif = real - c.saldo;
+      if (!esRaro(dif, tecleado)) { guardar(); return; }
+      $('aviso-tx').textContent = 'Suele significar que falta capturar un ' +
+        (dif > 0 ? 'depósito' : 'retiro') + ' de alrededor de ' + moneySmart(Math.abs(dif)) +
+        '. Si es así, cierra esta hoja, registra el movimiento y concilia después: la tasa real te saldrá bien.';
+      $('zona').classList.add('hide');
+      $('confirma').classList.remove('hide');
+    });
+    $('conf-si').addEventListener('click', guardar);
+    $('conf-no').addEventListener('click', function () {
+      $('confirma').classList.add('hide');
+      $('zona').classList.remove('hide');
     });
   }
 
@@ -1127,12 +1197,23 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     S.ajustes.tick = !S.ajustes.tick; persist(); this.classList.toggle('on', S.ajustes.tick);
     if (!S.ajustes.tick) render();
   });
+  $('priv-toggle').addEventListener('click', function () {
+    S.ajustes.privado = !S.ajustes.privado; persist();
+    oculto = true;   // al volver a encenderlo, que tape de inmediato
+    render();
+  });
+  $('ojo').addEventListener('click', function () {
+    oculto = !oculto;
+    render();        // render reinicia `vivos`, así que la animación sigue del saldo real
+  });
 
   /* ---------- rendimiento en vivo ----------
      Es solo un adorno visual: vive aparte del estado, nunca se guarda ni se exporta,
      y se resincroniza con el saldo real en cada render. */
   function tick() {
-    if (!S.ajustes.tick || actual !== 'home' || !S.cuentas.length) return;
+    /* con las cantidades tapadas no hay nada que animar, y si se dejara correr
+       volvería a escribir la cifra encima de los puntos */
+    if (!S.ajustes.tick || actual !== 'home' || !S.cuentas.length || tapar()) return;
     var frac = 0.15 / 86400;
     S.cuentas.forEach(function (c) {
       var el = document.querySelector('[data-live="' + c.id + '"]');
@@ -1154,7 +1235,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   render();
   if (S.cuentas.length || S.plazos.length) go('home');
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) { vivos = {}; devengar(); render(); }
+    if (!document.hidden) { oculto = true; vivos = {}; devengar(); render(); }
   });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () { }); });
