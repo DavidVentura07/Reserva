@@ -189,6 +189,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .primary{width:100%;border:0;border-radius:999px;background:var(--ink);color:#fff;font-size:15px;font-weight:600;padding:17px;cursor:pointer}
 .primary.warn{background:var(--neg)}
 .secondary{width:100%;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:15px;font-weight:600;padding:16px;cursor:pointer;margin-top:10px}
+.trrow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.trrow .fld{margin-bottom:0}
+.trrow .fld.a{flex:1.5}
+.trrow .fld.b{flex:1}
 .swatches{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
 .sw{width:42px;height:42px;border-radius:14px;border:3px solid transparent;cursor:pointer;padding:0}
 .sw.on{border-color:var(--ink)}
@@ -207,6 +211,31 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 #dif .marca{font-size:11.5px;font-weight:600;margin-left:7px;color:var(--warn)}
 .diffbox div{display:flex;justify-content:space-between}
 .diffbox span{color:var(--mut)}
+
+/* La pastilla de la mezcla en la pantalla principal. Va en la familia visual del
+   indicador de respaldo —discreta, sin llamada a la acción—: la app tiene una
+   decisión explícita en contra de la gamificación y los recordatorios. */
+.mezcla{display:inline-flex;align-items:center;gap:7px;background:var(--soft);color:var(--mut);border:0;font-size:12px;font-weight:500;padding:7px 14px;border-radius:999px;white-space:nowrap;margin-top:12px}
+.mezcla svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mezcla b{font-weight:700;color:var(--ink)}
+
+/* El medidor del tramo, en la ficha de la cuenta. La barra se escala a
+   max(saldo, tope): así se ve el hueco cuando falta y el excedente cuando sobra.
+   Escalarla a los tramos completos no funciona —un tramo de $30,000 contra un
+   techo de un millón ocupa el 3% del ancho— y escalarla al saldo la vuelve
+   incomparable de un día para otro. */
+.tramo{background:var(--card);border-radius:24px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:14px}
+.tramo .th{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.tramo .th b{font-size:14px;font-weight:600}
+.tramo .th .pv{font-size:13.5px;font-weight:600;color:var(--mut);white-space:nowrap}
+.meter{height:11px;border-radius:999px;background:var(--soft);overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+.meter i.fuera{background:#C9CACD}
+.tramo .lg{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);font-weight:500;margin-top:9px}
+.tramo .marca{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:#E9F7EE;color:var(--pos);letter-spacing:.3px}
+.tramo .sobra{font-size:12.5px;font-weight:500;line-height:1.55;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--warn)}
+.tramo .cabe{font-size:12.5px;font-weight:500;line-height:1.55;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--mut)}
+.tramo .cabe b,.tramo .sobra b{font-weight:700}
 </style>
 </head>
 <body>
@@ -239,6 +268,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <div class="lbl">Disponible hoy<button class="ojo" id="ojo" aria-label="Mostrar u ocultar las cantidades"></button></div>
       <div class="big num" id="hero">$0<span class="cts">.00</span></div>
       <div class="sub num" id="hero-sub"></div>
+      <div id="hero-mezcla"></div>
     </div>
     <div class="eyebrow"><b>A la vista</b><span id="count-vista"></span></div>
     <div id="list-vista"></div>
@@ -258,13 +288,14 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <div class="lbl">Saldo</div>
       <div class="bal num" id="dbal">$0<span class="cts">.00</span></div>
       <div class="two">
-        <div><span>Tasa declarada</span><b class="num" id="d-tasa">0%</b></div>
+        <div><span>Tasa efectiva</span><b class="num" id="d-tasa">0%</b><small id="d-tasa-note"></small></div>
         <div><span>Tasa real observada</span><b class="num" id="d-obs">—</b><small id="d-obs-note"></small></div>
       </div>
     </div>
     <div style="padding:0 20px">
       <div class="seg" id="dseg"><button class="on">Resumen</button><button>Movimientos</button></div>
       <div id="d-resumen">
+        <div id="d-tramo"></div>
         <div class="infoline" id="d-info"></div>
         <div class="grid">
           <div class="cell"><span>Aportado</span><b class="num" id="d-ap">$0</b></div>
@@ -324,6 +355,14 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
       <div><b>Tus datos viven solo en este teléfono</b><p>No hay servidor ni cuenta. Si borras la app sin respaldar, no hay forma de recuperar el historial.</p></div>
     </div>
+    <!-- Fuera del grupo de Respaldo a propósito: el resumen NO es una copia de
+         seguridad y no marca el contador. Debajo de «Respaldo» se leería como si
+         generarlo bastara para tener respaldo. -->
+    <div class="eyebrow" style="margin-top:22px"><b>Análisis</b><span></span></div>
+    <button class="act" id="a-resumen">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+      <span class="g"><b>Resumen para analizar</b><span>Un texto legible para revisar con Claude</span></span><span class="arw">›</span>
+    </button>
     <div class="eyebrow" style="margin-top:22px"><b>Cuentas</b><span id="a-count"></span></div>
     <div id="a-list"></div>
     <button class="act" data-sheet="cuenta">
@@ -331,6 +370,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <span class="g"><b>Agregar un banco</b><span>Nombre, color, tasa y requisito</span></span><span class="arw">›</span>
     </button>
     <div class="eyebrow" style="margin-top:22px"><b>Preferencias</b><span></span></div>
+    <button class="act" id="a-isr">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 19L19 5M8 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM16 20.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg></span>
+      <span class="g"><b>Retención de ISR</b><span id="a-isr-sub"></span></span><span class="arw">›</span>
+    </button>
     <div class="switch">Rendimiento en tiempo real<button id="tick-toggle"><i></i></button></div>
     <div class="switch">Ocultar las cantidades al abrir<button id="priv-toggle"><i></i></button></div>
     <div class="small-empty" style="padding:18px 0 0" id="ver-ajustes"></div>
@@ -358,7 +401,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.10';
+  var VERSION = '1.12';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -481,6 +524,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     if (!o.ajustes || typeof o.ajustes !== 'object') o.ajustes = { ultimoRespaldo: null, tick: true };
     if (o.ajustes.tick === undefined) o.ajustes.tick = true;
     if (o.ajustes.privado === undefined) o.ajustes.privado = true;
+    /* retención de ISR: 0.90% anual sobre el capital en 2026. Es editable porque
+       cambia cada año (era 0.50% en 2025), y global porque le pega igual a todos
+       los bancos: lo que cambia el orden entre ellos es que uno retenga y otro no. */
+    if (o.ajustes.isr === undefined) o.ajustes.isr = 0.009;
+    o.ajustes.isr = num(o.ajustes.isr);
     ['cuentas', 'plazos', 'movimientos'].forEach(function (k) { if (!Array.isArray(o[k])) o[k] = []; });
     o.cuentas.forEach(function (c) {
       delete c._vivo;                       // la v1 guardaba aquí el valor de la animación
@@ -488,8 +536,12 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       c.nombre = String(c.nombre == null ? 'Cuenta' : c.nombre);
       if (!TEMAS.some(function (x) { return x.id === c.tema; })) c.tema = TEMAS[0].id;
       c.tasa = num(c.tasa);
+      /* sin tope la cuenta es de tasa única y se comporta igual que antes de la
+         v1.12; un tope de 0 o basura equivale a no tener tope */
+      c.tope = (c.tope == null || c.tope === '' || !(num(c.tope) > 0)) ? null : num(c.tope);
+      c.tasaResto = num(c.tasaResto);
       c.saldo = num(c.saldo); c.aportado = num(c.aportado); c.retirado = num(c.retirado);
-      c.rendido = num(c.rendido); c.ajustes = num(c.ajustes);
+      c.rendido = num(c.rendido); c.ajustes = num(c.ajustes); c.isrRetenido = num(c.isrRetenido);
       c.vecesRetirado = Math.max(0, Math.round(num(c.vecesRetirado)));
       c.retieneISR = !!c.retieneISR;
       c.requisito = c.requisito == null ? '' : String(c.requisito);
@@ -501,6 +553,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       c.periodo.saldoInicio = num(c.periodo.saldoInicio, c.saldo);
       c.periodo.devengado = num(c.periodo.devengado);
       c.periodo.acumulado = num(c.periodo.acumulado);
+      /* `saldoDias` conserva el null a propósito: es la señal de que estos datos
+         son anteriores a la v1.2 y que `saldoPromedio()` debe caer a la fórmula
+         vieja en vez de dividir entre cero. */
+      if (c.periodo.saldoDias != null) c.periodo.saldoDias = num(c.periodo.saldoDias);
     });
     o.plazos.forEach(function (p) {
       p.id = p.id || uid(); p.nombre = String(p.nombre == null ? 'Plazo' : p.nombre);
@@ -525,6 +581,85 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   function totalPlazo() { return S.plazos.reduce(function (a, p) { return a + p.monto; }, 0); }
 
   /* ---------- devengo: acumula el interés de cada día ya transcurrido y lo congela ---------- */
+  /* ---------- tramos de tasa e ISR ----------
+     Los bancos no pagan "una" tasa: pagan la del cartel sólo sobre los primeros
+     miles y una mucho menor sobre el resto, y los tramos son MARGINALES (cada
+     tramo cobra su tasa sólo sobre la porción del saldo que le toca).
+     El modelo guarda dos números por cuenta —`tope` y `tasaResto`— y los tramos
+     se derivan de ahí. Se hizo así y no con un arreglo de tramos para que `tasa`
+     siga siendo la única fuente de la tasa alta: con un arreglo aparte las dos
+     copias se desincronizan. Sin `tope` la cuenta se comporta exactamente como
+     antes de la v1.12, así que un respaldo viejo entra sin tocar nada. */
+  function tramosDe(c) {
+    if (!(c.tope > 0)) return [{ hasta: null, tasa: c.tasa }];
+    return [{ hasta: c.tope, tasa: c.tasa }, { hasta: null, tasa: c.tasaResto }];
+  }
+  function interesAnual(saldo, tr) {
+    if (!(saldo > 0)) return 0;
+    var acum = 0, prev = 0;
+    for (var i = 0; i < tr.length; i++) {
+      var tope = tr[i].hasta == null ? Infinity : tr[i].hasta;
+      var porcion = Math.min(saldo, tope) - prev;
+      if (porcion > 0) acum += porcion * tr[i].tasa;
+      prev = tope;
+      if (saldo <= tope) break;
+    }
+    return acum;
+  }
+  /* La efectiva describe el dinero que YA está puesto; la marginal es la que
+     decide dónde va el siguiente peso. No son la misma y confundirlas es lo que
+     hacía creer que Openbank pagaba 13% cuando pagaba 8.96%. */
+  function efectiva(c) { return c.saldo > 0 ? interesAnual(c.saldo, tramosDe(c)) / c.saldo : c.tasa; }
+  function marginal(c) {
+    var tr = tramosDe(c);
+    for (var i = 0; i < tr.length; i++) {
+      var tope = tr[i].hasta == null ? Infinity : tr[i].hasta;
+      if (c.saldo < tope) return tr[i].tasa;
+    }
+    return tr[tr.length - 1].tasa;
+  }
+  /* El ISR se retiene sobre el CAPITAL (0.90% anual en 2026), no sobre el interés,
+     así que se resta directo de la tasa: interés neto / saldo = efectiva − isr.
+     Es un solo número global porque le pega igual a todos los bancos; lo que sí
+     cambia el orden entre bancos es que uno retenga y otro no. */
+  function isrDe(c) { return c.retieneISR ? (S.ajustes.isr || 0) : 0; }
+  function efectivaNeta(c) { return efectiva(c) - isrDe(c); }
+  function marginalNeta(c) { return marginal(c) - isrDe(c); }
+  /* cuánto cabe todavía en el tramo donde está parado el saldo */
+  function espacio(c) {
+    var tr = tramosDe(c), s = Math.max(0, c.saldo);   // un saldo negativo no deja «más sitio»
+    for (var i = 0; i < tr.length; i++) {
+      var tope = tr[i].hasta == null ? Infinity : tr[i].hasta;
+      if (s < tope) return tope - s;
+    }
+    return Infinity;
+  }
+  function tieneTope(c) { return c.tope > 0; }
+  /* Lo que de verdad entró al saldo. `rendido` guarda el bruto y la retención va
+     aparte, pero enseñar el bruto donde el saldo creció con el neto haría que las
+     cuentas no cuadraran a ojo. El bruto y el ISR se ven en el resumen para
+     analizar y, cuando la cuenta retiene, en la línea de información de la ficha. */
+  function rendidoNeto(c) { return c.rendido - (c.isrRetenido || 0); }
+  function sobrante(c) { return tieneTope(c) ? Math.max(0, c.saldo - c.tope) : 0; }
+  /* rendimiento neto anual en pesos, ya con tramos y con ISR */
+  function rendeNeto(c) { return c.saldo > 0 ? interesAnual(c.saldo, tramosDe(c)) - c.saldo * isrDe(c) : 0; }
+
+  function ponderadaNeta() {
+    var t = totalVista();
+    if (!(t > 0)) return null;
+    return S.cuentas.reduce(function (a, c) { return a + rendeNeto(c); }, 0) / t;
+  }
+  function mensualNeto() { return S.cuentas.reduce(function (a, c) { return a + rendeNeto(c); }, 0) / 12; }
+  /* dónde conviene poner el siguiente peso: la marginal neta más alta */
+  function mejorDestino() {
+    var best = null;
+    S.cuentas.forEach(function (c) {
+      var m = marginalNeta(c);
+      if (!best || m > best.tasa) best = { c: c, tasa: m };
+    });
+    return best;
+  }
+
   function devengar() {
     var h = hoy(), cambio = false;
     S.cuentas.forEach(function (c) {
@@ -534,16 +669,28 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       if (n < 0) { c.ultimoDevengo = h; cambio = true; return; }
       if (n === 0) return;
       if (n > 800) n = 800;
-      var i = 0, interes = 0;
+      /* los tramos y la retención no cambian dentro del bucle; el saldo sí, y por
+         eso el interés se recalcula cada día contra el saldo de ese día */
+      var tr = tramosDe(c), isr = isrDe(c);
+      var i = 0, neto = 0, bruto = 0, retenido = 0;
       for (; i < n; i++) {
         /* se guarda el saldo de cada día para poder sacar después el saldo promedio
            real del periodo; sin esto, un traspaso a media quincena falseaba la tasa observada */
         c.periodo.saldoDias = (c.periodo.saldoDias || 0) + c.saldo;
-        var d = c.saldo * c.tasa / 365;
-        c.saldo += d; interes += d;
+        var db = interesAnual(c.saldo, tr) / 365;
+        var dr = Math.max(0, c.saldo) * isr / 365;
+        var d = db - dr;
+        c.saldo += d; neto += d; bruto += db; retenido += dr;
       }
-      c.rendido += interes;
-      c.periodo.devengado += interes;
+      /* `rendido` sigue siendo el BRUTO y la retención se lleva aparte, así la
+         aritmética cuadra (saldo = aportado − retirado + rendido − isrRetenido +
+         ajustes) y de paso se sabe cuánto ISR lleva pagado la cuenta.
+         `periodo.devengado` en cambio es el NETO: es lo que movió el saldo, y es
+         contra el saldo real —que ya viene neto del banco— con lo que se compara
+         al conciliar. Meter aquí el bruto rompería la tasa real observada. */
+      c.rendido += bruto;
+      c.isrRetenido = (c.isrRetenido || 0) + retenido;
+      c.periodo.devengado += neto;
       c.ultimoDevengo = h;
       cambio = true;
     });
@@ -651,8 +798,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* ---------- respaldo ---------- */
   var KEY_PREVIO = 'reserva.v1.previo';
 
-  function descargar(texto, nombre, listo) {
-    var blob = new Blob([texto], { type: 'application/json' });
+  function descargar(texto, nombre, listo, tipo) {
+    var blob = new Blob([texto], { type: tipo || 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = nombre;
     document.body.appendChild(a); a.click();
@@ -687,6 +834,222 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       }
     } catch (e) { /* sin soporte de compartir archivos: se descarga */ }
     descargar(texto, nombre, listo);
+  }
+
+  /* ---------- resumen para analizar ---------- */
+  /* El respaldo está hecho para restaurar, no para leerse: lleva ids, `saldoDias` y
+     `acumulado`, y no explica la semántica —quien lo abra tiene que adivinar que un
+     `ajuste` es una corrección y no un movimiento, o que los plazos no cuentan como
+     disponible—. Este archivo es lo contrario: texto que se entiende solo. Son dos
+     exportaciones distintas a propósito: si el respaldo cambiara de forma para leerse
+     mejor, la importación se rompería.
+     No toca `ultimoRespaldo`: un resumen no es una copia de seguridad, y marcar el
+     contador aquí haría creer que hay respaldo cuando no lo hay. */
+
+  var DIAS_RESUMEN = 90;
+
+  /* El signo va antes del peso: `$-2,339.44` se lee mal y en una tabla de ajustes,
+     que son casi todos negativos, se lee mal muchas veces seguidas. */
+  function m2(v) { return (v <= -0.005 ? '−$' : '$') + fmt2.format(Math.abs(v)); }
+  function pct2(v) { return (v * 100).toFixed(2) + '%'; }
+  function pp(v) { return (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(2) + ' pp'; }
+  function suma(f) { return S.cuentas.reduce(function (a, c) { return a + f(c); }, 0); }
+
+  /* Desde la v1.12 la mezcla la calcula ponderadaNeta() con el motor de tramos e
+     ISR, la misma que pinta la pastilla de la pantalla principal. Aquí sólo queda
+     la ponderada OBSERVADA, que es la medida y no la calculada.
+     La observada sólo puede ponderar las cuentas que ya midieron, así que va con su
+     cobertura: una mezcla calculada sobre el 40% del dinero no dice lo mismo. */
+  function ponderadaObservada() {
+    var base = 0, s = 0, t = totalVista();
+    S.cuentas.forEach(function (c) {
+      var o = tasaObservada(c);
+      if (!o || c.saldo <= 0) return;
+      base += c.saldo; s += c.saldo * o.tasa;
+    });
+    if (base <= 0) return null;
+    return { tasa: s / base, cobertura: t > 0 ? base / t : 0 };
+  }
+
+  function resumenMD() {
+    var h = hoy(), L = [], tv = totalVista(), tp = totalPlazo();
+    var hd = new Date(), sem = SEMANA[hd.getDay()];
+    var A = function (s) { L.push(s == null ? '' : s); };
+
+    A('# Reserva — resumen para analizar');
+    A('');
+    A('Generado el ' + sem + ' ' + fechaLarga(h) + ' de ' + h.slice(0, 4) + ' · Reserva v' + VERSION);
+    A('');
+    A('## Cómo leer esto');
+    A('');
+    A('Reserva es una app personal, sin servidor ni cuentas, que lleva el control de un fondo de emergencia repartido entre bancos digitales. Antes de sacar conclusiones de las cifras conviene saber cómo se producen:');
+    A('');
+    A("- **La app no le pregunta el saldo al banco.** Lo proyecta: cada día que pasa suma el interés que le toca y lo congela. Editar la tasa, el tramo o la retención sólo afecta días futuros — el historial nunca se recalcula hacia atrás.");
+    A("- **Conciliar** es capturar a mano el saldo que el banco muestra de verdad. Ajusta el saldo proyectado al real y registra la diferencia como `ajuste`. Un ajuste **no** es dinero que entró o salió: es la corrección de lo que la proyección erró.");
+    A("- **Los bancos pagan por tramos marginales, no una sola tasa.** La del cartel se paga sólo sobre los primeros miles (`tope`) y de ahí en adelante se paga otra mucho menor (`tasaResto`). Cada tramo cobra su tasa sólo sobre la porción del saldo que le toca. De ahí salen dos números distintos que no hay que confundir: la **tasa efectiva** describe el dinero que ya está puesto, y la **tasa marginal** es la que ganaría el siguiente peso. Para decidir dónde poner dinero manda la marginal.");
+    A("- **El ISR se retiene sobre el capital, no sobre el interés** (0.90% anual en 2026, un solo número global en Ajustes). Por eso se resta directo de la tasa. Se aplica sólo a las cuentas marcadas con `retieneISR`, y como no todas retienen, **puede cambiar el orden entre bancos**: uno que no retiene al 12.40% le gana a uno que retiene al 13%.");
+    A("- **El saldo proyectado crece con la tasa NETA** (tramos e ISR ya aplicados). `rendido` guarda el interés bruto acumulado e `isrRetenido` la retención acumulada, por separado, de modo que `saldo = aportado − retirado + rendido − isrRetenido + ajustes`.");
+    A("- **Tasa real observada** es la que se deduce de las conciliaciones: interés real del periodo dividido entre el saldo promedio ponderado por tiempo, anualizado. Pide una ventana de al menos 7 días y promedia las últimas 3 mediciones. Como el saldo que reporta el banco ya viene neto, la observada es neta — y por tanto **se compara directamente contra la efectiva neta**, no contra la tasa del cartel.");
+    A("- **Ahí está la auditoría, y es lo más útil que hay aquí:** si la efectiva neta calculada y la observada se separan mucho, lo capturado no describe al banco. Lo más probable es que el `tope` esté mal o que el banco lo haya movido sin avisar; también puede ser un movimiento sin registrar o que el banco sí retenga ISR aunque esté marcado como que no. Un `ajustes` acumulado grande y negativo es la huella de lo mismo.");
+    A("- **Los plazos (CETES, pagarés) nunca cuentan como disponible.** Tienen tasa fija conocida al contratar, no se devengan a diario ni se concilian.");
+    A("- **Un traspaso entre cuentas no es aportación ni retiro.** No toca `aportado`, `retirado` ni `vecesRetirado`, a propósito: mover dinero persiguiendo mejor tasa no debe ensuciar la métrica de cuántas veces se ha tocado el fondo.");
+    A("- Las mediciones más limpias salen cuando dos conciliaciones caen en el **mismo día de la semana**: los bancos abonan el interés del fin de semana hasta el lunes o el martes, y ese retraso sólo se cancela si es igual en los dos extremos de la ventana. Fuera de ritmo, una medición suelta puede leer 8% donde se paga 13%.");
+    A('');
+
+    A('## Panorama');
+    A('');
+    var pn = ponderadaNeta(), po = ponderadaObservada(), mejor = mejorDestino();
+    A('| Concepto | Valor |');
+    A('|---|---|');
+    A('| Disponible hoy (cuentas a la vista) | ' + m2(tv) + ' |');
+    A('| A plazo (no disponible) | ' + m2(tp) + ' |');
+    A('| Patrimonio total | ' + m2(tv + tp) + ' |');
+    A('| Cuentas a la vista | ' + S.cuentas.length + ' |');
+    A('| Tasa neta de la mezcla (calculada, con tramos e ISR) | ' + (pn == null ? '—' : pct2(pn)) + ' |');
+    A('| Tasa observada de la mezcla (medida) | ' + (po == null ? '— (todavía sin mediciones)' : pct2(po.tasa) + ', sobre el ' + Math.round(po.cobertura * 100) + '% del saldo') + ' |');
+    if (pn != null && po != null) A('| Brecha entre calculada y medida | ' + pp(po.tasa - pn) + ' |');
+    if (pn != null) A('| Rendimiento mensual neto | ' + m2(mensualNeto()) + ' |');
+    A('| Dónde conviene el siguiente peso | ' + (mejor ? mejor.c.nombre + ' · ' + pct2(mejor.tasa) + ' marginal neta' : '—') + ' |');
+    A('| Retención de ISR configurada | ' + pct2(S.ajustes.isr) + ' anual sobre el capital |');
+    A('| Aportado acumulado | ' + m2(suma(function (c) { return c.aportado; })) + ' |');
+    A('| Retirado acumulado | ' + m2(suma(function (c) { return c.retirado; })) + ' en ' + suma(function (c) { return c.vecesRetirado; }) + ' retiros |');
+    A('| Rendido acumulado (bruto) | ' + m2(suma(function (c) { return c.rendido; })) + ' |');
+    A('| ISR retenido acumulado | ' + m2(suma(function (c) { return c.isrRetenido; })) + ' |');
+    A('| Rendido acumulado neto | ' + m2(suma(function (c) { return c.rendido - c.isrRetenido; })) + ' |');
+    A('| Ajustes acumulados por conciliación | ' + m2(suma(function (c) { return c.ajustes; })) + ' |');
+    A('| Último respaldo | ' + (S.ajustes.ultimoRespaldo || 'nunca') + ' |');
+    A('');
+
+    A('## Cuentas a la vista');
+    A('');
+    if (!S.cuentas.length) A('_Ninguna._');
+    S.cuentas.forEach(function (c) {
+      var o = tasaObservada(c), dv = dias(c.periodo.desde, h);
+      A('### ' + c.nombre + ' — ' + m2(c.saldo));
+      A('');
+      A('| Concepto | Valor |');
+      A('|---|---|');
+      A('| Saldo proyectado hoy | ' + m2(c.saldo) + ' |');
+      A('| Peso en el disponible | ' + (tv > 0 ? (c.saldo / tv * 100).toFixed(1) + '%' : '—') + ' |');
+      A('| Tramos de tasa | ' + (tieneTope(c)
+          ? pct2(c.tasa) + ' hasta ' + m2(c.tope) + ', luego ' + pct2(c.tasaResto)
+          : pct2(c.tasa) + ' sin tope (tasa única)') + ' |');
+      A('| Tasa efectiva sobre el saldo (bruta) | ' + pct2(efectiva(c)) + ' |');
+      A('| Tasa efectiva neta (ya con ISR) | ' + pct2(efectivaNeta(c)) + (c.retieneISR ? '' : ' (esta cuenta no retiene)') + ' |');
+      A('| Tasa marginal neta (la del siguiente peso) | ' + pct2(marginalNeta(c)) + ' |');
+      if (tieneTope(c)) A('| Estado del tramo | ' + (sobrante(c) > 0
+          ? m2(sobrante(c)) + ' por encima del tope, ganando ' + pct2(c.tasaResto)
+          : 'caben ' + m2(espacio(c)) + ' más al ' + pct2(c.tasa)) + ' |');
+      A('| Tasa real observada (medida, neta) | ' + (o ? pct2(o.tasa) + ', promedio de ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : 'sin medir — ' + notaSinTasa(c)) + ' |');
+      /* la comparación que vale es medida contra calculada NETA: contra la tasa
+         del cartel se restaría una bruta de una neta y siempre saldría brecha */
+      if (o) A('| Brecha medida − calculada neta | ' + pp(o.tasa - efectivaNeta(c)) + ' |');
+      A('| Retención de ISR | ' + (c.retieneISR ? 'sí, ' + pct2(S.ajustes.isr) + ' anual sobre el capital' : 'no marcada') + ' |');
+      A('| Requisito para conservar la tasa | ' + (c.requisito || '—') + ' |');
+      A('| Aportado | ' + m2(c.aportado) + ' |');
+      A('| Retirado | ' + m2(c.retirado) + ' en ' + c.vecesRetirado + (c.vecesRetirado === 1 ? ' retiro' : ' retiros') + ' |');
+      A('| Rendido (bruto) | ' + m2(c.rendido) + ' |');
+      A('| ISR retenido | ' + m2(c.isrRetenido) + ' |');
+      A('| Rendido neto | ' + m2(c.rendido - c.isrRetenido) + ' |');
+      A('| Ajustes acumulados | ' + m2(c.ajustes) + ' |');
+      A('| Ventana de medición abierta | desde ' + c.periodo.desde + ' (' + dv + (dv === 1 ? ' día' : ' días') + ') |');
+      A('| Interés devengado sin conciliar | ' + m2(c.periodo.devengado + (c.periodo.acumulado || 0)) + ' |');
+      A('| Interés calculado hasta | ' + c.ultimoDevengo + ' |');
+      A('');
+      if (c.historialTasas.length) {
+        /* el historial mezcla tres cosas: la tasa, el tope (un monto) y la tasa
+           del resto. Imprimirlas todas como porcentaje sacaba un tope de $40,000
+           como «4000000.00%», y el alta —que va con `de` nulo— como «0.00% →». */
+        A('Cambios registrados: ' + c.historialTasas.map(function (x) {
+          if (x.campo === 'tope') return x.fecha + ': tope ' + (x.de ? m2(x.de) : 'sin tope') + ' → ' + (x.a ? m2(x.a) : 'sin tope');
+          if (x.campo === 'resto') return x.fecha + ': tasa del resto ' + pct2(x.de) + ' → ' + pct2(x.a);
+          if (x.de == null) return x.fecha + ': alta con ' + pct2(x.a);
+          return x.fecha + ': tasa ' + pct2(x.de) + ' → ' + pct2(x.a);
+        }).join(' · '));
+        A('');
+      }
+      if (c.conciliaciones.length) {
+        A('Conciliaciones (' + c.conciliaciones.length + ', de la más reciente a la más antigua):');
+        A('');
+        A('| Fecha | Días de ventana | Saldo real capturado | Saldo proyectado | Ajuste | Tasa medida |');
+        A('|---|---:|---:|---:|---:|---|');
+        c.conciliaciones.forEach(function (x) {
+          var t = x.tasaObs != null ? pct2(x.tasaObs) : (x.dias >= 7 ? 'descartada (fuera de rango)' : 'ventana corta, no midió');
+          A('| ' + x.fecha + ' | ' + x.dias + ' | ' + m2(x.saldoReal) + ' | ' + m2(x.proyectado) + ' | ' + (x.ajuste >= 0 ? '+$' : '−$') + fmt2.format(Math.abs(x.ajuste)) + ' | ' + t + ' |');
+        });
+      } else {
+        A('_Todavía sin conciliaciones: el saldo de esta cuenta es proyección pura, nunca se ha contrastado contra el banco._');
+      }
+      A('');
+    });
+
+    A('## A plazo');
+    A('');
+    A('_Este dinero no cuenta como disponible._');
+    A('');
+    if (!S.plazos.length) A('_Ningún instrumento activo._');
+    else {
+      A('| Instrumento | Monto | Tasa | Inicio | Vence | Al vencimiento |');
+      A('|---|---:|---:|---|---|---:|');
+      S.plazos.forEach(function (p) {
+        A('| ' + p.nombre + ' | ' + m2(p.monto) + ' | ' + pct2(p.tasa) + ' | ' + p.inicio + ' | ' + p.vence + ' | ' + m2(alVencimiento(p)) + ' |');
+      });
+    }
+    A('');
+
+    var corte = new Date(); corte.setDate(corte.getDate() - DIAS_RESUMEN);
+    var lim = hoy(corte);
+    /* Ordenados por fecha aunque el arreglo venga desordenado: una lista para leer
+       tiene que ir en orden, y `unshift` sólo garantiza el orden de captura. */
+    var recientes = S.movimientos.filter(function (m) { return m.fecha >= lim; })
+      .slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0; });
+    var fuera = S.movimientos.length - recientes.length;
+    A('## Movimientos (últimos ' + DIAS_RESUMEN + ' días)');
+    A('');
+    if (!recientes.length) A('_Ninguno en este periodo._');
+    else {
+      A('| Fecha | Tipo | Cuenta | Monto | Detalle |');
+      A('|---|---|---|---:|---|');
+      recientes.forEach(function (m) {
+        var c = cuenta(m.cuentaId), det = '';
+        if (m.tipo === 'traspaso') { var dd = cuenta(m.destinoId); det = 'destino: ' + (dd ? dd.nombre : '—'); }
+        else if (m.tipo === 'conciliacion') det = 'ajuste ' + (m.ajuste >= 0 ? '+$' : '−$') + fmt2.format(Math.abs(m.ajuste)) + ' sobre el saldo proyectado';
+        else if (m.motivo) det = 'motivo: ' + m.motivo;
+        A('| ' + m.fecha + ' | ' + m.tipo + ' | ' + (c ? c.nombre : 'cuenta eliminada') + ' | ' + m2(m.monto) + ' | ' + det + ' |');
+      });
+    }
+    A('');
+    if (fuera > 0) { A('_Quedan ' + fuera + ' movimientos más antiguos fuera de esta lista. Están completos en el estado crudo del final._'); A(''); }
+
+    A('## Estado crudo');
+    A('');
+    A('El estado completo de la app, sin recortar, por si hace falta calcular con precisión. Es el mismo formato del archivo de respaldo; `periodo`, `saldoDias` y `acumulado` son maquinaria interna del motor de devengo.');
+    A('');
+    A('```json');
+    A(JSON.stringify(S));
+    A('```');
+    A('');
+    return L.join('\n');
+  }
+
+  function exportarResumen() {
+    var texto = resumenMD();
+    var nombre = 'reserva-resumen-' + hoy() + '.md';
+    function listo() { toast('Resumen guardado'); }
+    try {
+      /* `text/plain` con extensión `.md`: la hoja de compartir de iOS trata el texto
+         plano sin dudarlo, y el nombre del archivo es lo que decide cómo lo abre
+         después la computadora. */
+      var f = new File([texto], nombre, { type: 'text/plain' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        navigator.share({ files: [f] }).then(listo).catch(function (e) {
+          if (e && e.name === 'AbortError') { toast('No se guardó: la hoja se cerró'); return; }
+          descargar(texto, nombre, listo, 'text/plain');
+        });
+        return;
+      }
+    } catch (e) { /* sin soporte de compartir archivos: se descarga */ }
+    descargar(texto, nombre, listo, 'text/plain');
   }
 
   function guardarPrevio() {
@@ -761,13 +1124,28 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('hero').innerHTML = tap ? '<span class="sym">$</span>' + pts(6, '12px', '9px', '8px') : moneyCents(tv, true);
     $('hero-sub').innerHTML = tap ? 'Patrimonio total ' + pts(6, '5px', '3.5px')
       : 'Patrimonio total ' + money(tv + tp) + (tp > 0 ? ' · ' + money(tp) + ' a plazo' : '');
+    /* La tasa de la mezcla y lo que deja al mes. El porcentaje NO se tapa —no
+       filtra el saldo— pero la cifra en pesos sí: con la tasa a la vista, saber
+       lo que ganas al mes permite despejar cuánto tienes. Es la misma fuga que
+       obligó en la v1.8 a tapar las cinco cifras y no sólo la grande. */
+    var pn = ponderadaNeta();
+    $('hero-mezcla').innerHTML = pn == null ? '' :
+      '<span class="mezcla"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>' +
+      'Rinde <b>' + pct(pn) + '</b> neto · ' +
+      (tap ? '$' + pts(4, '5px', '3.5px', '4px') : '<b class="num">' + money(mensualNeto()) + '</b>') +
+      ' al mes</span>';
+
     $('count-vista').textContent = S.cuentas.length + (S.cuentas.length === 1 ? ' cuenta' : ' cuentas');
 
     $('list-vista').innerHTML = S.cuentas.length ? S.cuentas.map(function (c) {
       return '<button class="bank" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
-        '<div class="top"><span class="nm">' + esc(c.nombre) + '</span><span class="tag">' + pct(c.tasa) + ' tasa</span></div>' +
+        /* con tramos la tasa del cartel describe sólo los primeros miles, así que
+           la tarjeta enseña la efectiva; sin tope las dos son la misma cifra y se
+           deja el texto de siempre para no meter jerga donde no hace falta */
+        '<div class="top"><span class="nm">' + esc(c.nombre) + '</span><span class="tag">' +
+          (tieneTope(c) ? pct(efectiva(c)) + ' efectiva' : pct(c.tasa) + ' tasa') + '</span></div>' +
         '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(6, '8px', '6px', '7px') : moneyCents(c.saldo)) + '</div>' +
-        '<div class="foot"><span>Rendido ' + (tap ? pts(4, '4px', '3px') : money(c.rendido)) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
+        '<div class="foot"><span>' + pieTarjeta(c, tap) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
         '</button>';
     }).join('') : '<div class="small-empty">Todavía no has agregado ninguna cuenta a la vista.</div>';
 
@@ -785,15 +1163,27 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('a-list').innerHTML = S.cuentas.map(function (c) {
       return '<button class="act" data-editar="' + c.id + '">' +
         '<span class="ic" style="background:' + tema(c.tema) + '"></span>' +
-        '<span class="g"><b>' + esc(c.nombre) + '</b><span>' + pct(c.tasa) + ' · ' + (c.retieneISR ? 'retiene ISR' : 'sin retención') + '</span></span>' +
+        '<span class="g"><b>' + esc(c.nombre) + '</b><span>' + pct(c.tasa) +
+          (tieneTope(c) ? ' hasta ' + money(c.tope) + ', luego ' + pct(c.tasaResto) : '') +
+          ' · ' + (c.retieneISR ? 'retiene ISR' : 'sin retención') + '</span></span>' +
         '<span class="arw">›</span></button>';
     }).join('');
 
+    $('a-isr-sub').textContent = pct(S.ajustes.isr) + ' anual sobre el capital';
     $('tick-toggle').classList.toggle('on', !!S.ajustes.tick);
     $('priv-toggle').classList.toggle('on', !!S.ajustes.privado);
     $('a-undo').classList.toggle('hide', !hayPrevio());
 
     if (detalleId) renderDetalle();
+  }
+
+  /* El pie de la tarjeta dice lo más accionable que haya: si el banco tiene tope,
+     cuánto falta para llenarlo o que ya se pasó; si no, lo rendido de siempre.
+     Las cifras en pesos se tapan; los porcentajes no, no filtran el saldo. */
+  function pieTarjeta(c, tap) {
+    if (!tieneTope(c)) return 'Rendido ' + (tap ? pts(4, '4px', '3px') : money(rendidoNeto(c)));
+    if (sobrante(c) > 0) return 'Tope alcanzado · resto al ' + pct(c.tasaResto);
+    return 'Caben ' + (tap ? pts(4, '4px', '3px') : money(espacio(c))) + ' al ' + pct(c.tasa);
   }
 
   /* `tap` sólo lo manda la pantalla principal: la pestaña de Plazos siempre
@@ -830,22 +1220,67 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<span class="am ' + cls + ' num">' + am + '</span></button>';
   }
 
+  /* El medidor del tramo. Sólo aparece si la cuenta tiene tope: en una cuenta de
+     tasa única no hay nada que vigilar y una tarjeta que lo dijera sería ruido.
+     La ficha nunca se tapa con tapar() —llegar hasta aquí ya es una decisión del
+     usuario, decisión de la v1.8— así que aquí las cifras van a la vista. */
+  function piezaTramo(c) {
+    if (!tieneTope(c)) return '';
+    /* Math.max protege del saldo negativo, que se puede dar retirando de más:
+       sin él la barra saldría con un ancho negativo y el rótulo en rojo. */
+    var dentro = Math.max(0, Math.min(c.saldo, c.tope)), fuera = sobrante(c);
+    var escala = Math.max(c.saldo, c.tope);
+    var pd = escala > 0 ? dentro / escala * 100 : 0;
+    var pf = escala > 0 ? fuera / escala * 100 : 0;
+    var lleno = fuera > 0 || dentro >= c.tope - 0.005;
+    return '<div class="tramo">' +
+      '<div class="th"><b>Tu tramo al ' + pct(c.tasa) + '</b>' +
+        (lleno ? '<span class="marca">TOPE ALCANZADO</span>'
+               : '<span class="pv num">' + money(dentro) + ' de ' + money(c.tope) + '</span>') + '</div>' +
+      '<div class="meter"><i style="width:' + pd + '%;background:' + tema(c.tema) + '"></i>' +
+        (pf > 0 ? '<i class="fuera" style="width:' + pf + '%"></i>' : '') + '</div>' +
+      '<div class="lg"><span class="num">' + money(dentro) + '</span>' +
+        '<span class="num">' + money(fuera > 0 ? c.saldo : c.tope) + '</span></div>' +
+      (fuera > 0
+        ? '<div class="sobra"><b>' + money(fuera) + ' fuera del tramo</b>, ganando ' + pct(c.tasaResto) + '. ' + destinoPara(c) + '</div>'
+        : '<div class="cabe">Te caben <b>' + money(c.tope - dentro) + '</b> más a esta tasa.</div>') +
+      '</div>';
+  }
+
+  /* A dónde conviene mover el excedente. Compara marginales NETAS: un banco que
+     no retiene al 12.40% le gana a uno que retiene al 13%, así que comparar las
+     brutas mandaría el dinero al banco equivocado. */
+  function destinoPara(c) {
+    var b = mejorDestino();
+    if (!b || b.c.id === c.id || b.tasa <= marginalNeta(c) + 1e-9) return 'Es el mejor destino que tienes.';
+    return 'En ' + esc(b.c.nombre) + ' ganarían ' + pct(b.tasa) + '.';
+  }
+
   function renderDetalle() {
     var c = cuenta(detalleId); if (!c) { go('home'); return; }
     $('dtop').style.background = temaDetalle(c.tema);
     $('dname').textContent = c.nombre;
     $('dbal').innerHTML = moneyCents(c.saldo);
-    $('d-tasa').textContent = pct(c.tasa);
+    /* la efectiva, no la del cartel: con tramos son distintas y la del cartel
+       sólo describe los primeros miles */
+    $('d-tasa').textContent = pct(efectiva(c));
+    $('d-tasa-note').textContent = isrDe(c) ? pct(efectivaNeta(c)) + ' ya con ISR'
+      : (tieneTope(c) ? 'sobre ' + pct(c.tasa) + ' hasta el tope' : 'sin retención de ISR');
+    $('d-tramo').innerHTML = piezaTramo(c);
     var o = tasaObservada(c);
     $('d-obs').textContent = o ? pct(o.tasa) : '—';
     $('d-obs-note').textContent = o ? 'estimada · ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : notaSinTasa(c);
     $('d-ap').textContent = money(c.aportado);
     $('d-re').textContent = money(c.retirado);
-    $('d-rd').textContent = '+' + money(c.rendido);
+    $('d-rd').textContent = '+' + money(rendidoNeto(c));
     $('d-vr').textContent = c.vecesRetirado;
-    /* el ISR nunca entra al cálculo, pero sí debe estar a la vista en la ficha */
-    var info = [c.retieneISR ? 'Retiene ISR' : 'Sin retención de ISR'];
-    var cambio = c.historialTasas.filter(function (x) { return x.de != null; })[0];
+    /* desde la v1.12 el ISR sí entra al cálculo, así que la ficha dice cuánto */
+    var info = [c.retieneISR
+      ? 'Retiene ISR (' + pct(S.ajustes.isr) + ' anual sobre el capital)' + (c.isrRetenido > 0 ? ', van ' + money(c.isrRetenido) + ' sobre ' + money(c.rendido) + ' brutos' : '')
+      : 'Sin retención de ISR'];
+    /* el historial guarda también cambios de tope y de la tasa del resto; aquí
+       sólo interesa la tasa, o se leería un monto como si fuera un porcentaje */
+    var cambio = c.historialTasas.filter(function (x) { return x.de != null && (!x.campo || x.campo === 'tasa'); })[0];
     info.push(cambio
       ? 'tasa modificada el ' + fechaLarga(cambio.fecha) + ', de ' + pct(cambio.de) + ' a ' + pct(cambio.a)
       : 'tasa sin cambios desde el alta');
@@ -1027,6 +1462,26 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     });
   }
 
+  /* La retención va aquí y no por cuenta porque es la misma para todos los bancos
+     que retienen; lo que se decide por cuenta es sólo si retiene o no. Es editable
+     porque el porcentaje cambia cada año: 0.50% en 2025, 0.90% en 2026. */
+  function hojaISR() {
+    abrir(
+      '<h3>Retención de ISR</h3>' +
+      '<p class="infoline">Los bancos retienen ISR sobre el <b>capital</b>, no sobre el interés. La tasa la fija la Ley de Ingresos cada año, así que hay que actualizarla en enero.</p>' +
+      '<span class="lb">Retención anual sobre el capital (%)</span>' +
+      '<input class="fld" id="f-isrpct" type="text" inputmode="decimal" autocomplete="off" placeholder="0.90" value="' + +(S.ajustes.isr * 100).toFixed(4) + '">' +
+      '<p class="quiet">Sólo se aplica a las cuentas que tengas marcadas como «Retiene ISR». Afecta a los días que vengan, nunca al historial ya devengado.</p>' +
+      '<button class="primary" id="save">Guardar</button>'
+    );
+    $('save').addEventListener('click', function () {
+      var v = parseNum($('f-isrpct').value) / 100;
+      if (!(v >= 0 && v < 0.5)) { toast('Escribe un porcentaje válido'); return; }
+      S.ajustes.isr = v;
+      persist(); cerrar(); render(); toast('Retención actualizada');
+    });
+  }
+
   function hojaCuenta(id) {
     var c = id ? cuenta(id) : null;
     var t = c ? c.tema : TEMAS[0].id;
@@ -1036,9 +1491,20 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<span class="lb">Color</span><div class="swatches" id="sw">' +
       TEMAS.map(function (x) { return '<button class="sw' + (x.id === t ? ' on' : '') + '" data-t="' + x.id + '" style="background:' + tema(x.id) + '"></button>'; }).join('') + '</div>' +
       '<span class="lb">Tasa anual declarada (%)</span><input class="fld" id="f-tasa" type="text" inputmode="decimal" autocomplete="off" placeholder="12.5" value="' + (c ? +(c.tasa * 100).toFixed(4) : '') + '">' +
+      /* Los dos campos del tramo van en una sola fila: en renglones separados la
+         hoja crecía 303px y se topaba contra el max-height del 94%. Ambos pueden
+         quedarse vacíos — entonces la cuenta es de tasa única, como antes. */
+      '<span class="lb">Tope de esa tasa · tasa de ahí en adelante</span>' +
+      '<div class="trrow">' +
+        '<input class="fld a" id="f-tope" type="text" inputmode="decimal" autocomplete="off" placeholder="Sin tope" value="' + (c && c.tope ? c.tope : '') + '">' +
+        '<input class="fld b" id="f-resto" type="text" inputmode="decimal" autocomplete="off" placeholder="%" value="' + (c && c.tope ? +(c.tasaResto * 100).toFixed(4) : '') + '">' +
+      '</div>' +
+      '<p class="quiet">Déjalo vacío si el banco paga igual sin importar el monto.</p>' +
       (c ? '' : '<span class="lb">Saldo actual</span><input class="fld" id="f-saldo" type="text" inputmode="decimal" autocomplete="off" placeholder="12500.75">') +
+      '<div class="diffbox" id="f-previo"></div>' +
       '<span class="lb">Requisito para conservar la tasa</span><input class="fld" id="f-req" placeholder="Una compra al mes (opcional)" value="' + esc(c ? c.requisito : '') + '">' +
       '<div class="switch">Retiene ISR<button id="f-isr" class="' + (!c || c.retieneISR ? 'on' : '') + '"><i></i></button></div>' +
+      '<p class="quiet">' + pct(S.ajustes.isr) + ' anual sobre el capital. Se configura una sola vez en Ajustes.</p>' +
       '<button class="primary" id="save">' + (c ? 'Guardar cambios' : 'Agregar cuenta') + '</button>' +
       (c ? '<button class="secondary" id="del" style="color:#BA1A1A">Eliminar cuenta</button>' : '')
     );
@@ -1047,25 +1513,67 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       t = b.dataset.t;
       [].forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
     });
-    $('f-isr').addEventListener('click', function () { this.classList.toggle('on'); });
+    /* Lee la hoja tal como está tecleada y arma una cuenta de mentira, para poder
+       usar el mismo motor que la app en vez de repetir la fórmula aquí. */
+    function borrador() {
+      var tope = parseNum($('f-tope').value);
+      return {
+        saldo: c ? c.saldo : ($('f-saldo') ? parseNum($('f-saldo').value) : 0),
+        tasa: parseNum($('f-tasa').value) / 100,
+        tope: tope > 0 ? tope : null,
+        tasaResto: parseNum($('f-resto').value) / 100,
+        retieneISR: $('f-isr').classList.contains('on')
+      };
+    }
+    /* Tres renglones fijos: el alto NO puede cambiar mientras se teclea o la hoja
+       se desplaza bajo el dedo. Por eso "Ya con ISR" se queda aunque no retenga,
+       diciendo que no retiene, en vez de desaparecer. */
+    function pintarPrevio() {
+      var b = borrador();
+      var hay = b.saldo > 0;
+      $('f-previo').innerHTML =
+        '<div><span>Efectiva sobre tu saldo</span><b class="num">' + (hay ? pct(efectiva(b)) : '—') + '</b></div>' +
+        '<div><span>Ya con ISR</span><b class="num">' + (!b.retieneISR ? 'no retiene' : hay ? pct(efectivaNeta(b)) : '—') + '</b></div>' +
+        '<div><span>El siguiente peso gana</span><b class="num">' + pct(marginalNeta(b)) + '</b></div>';
+    }
+    ['f-tasa', 'f-tope', 'f-resto', 'f-saldo'].forEach(function (id) {
+      if ($(id)) $(id).addEventListener('input', pintarPrevio);
+    });
+    $('f-isr').addEventListener('click', function () { this.classList.toggle('on'); pintarPrevio(); });
+    pintarPrevio();
     $('save').addEventListener('click', function () {
       var nom = $('f-nom').value.trim();
       var tasaRaw = $('f-tasa').value.trim();
       var tasa = parseNum(tasaRaw) / 100;
+      var topeRaw = $('f-tope').value.trim();
+      var tope = topeRaw ? parseNum(topeRaw) : 0;
+      var restoRaw = $('f-resto').value.trim();
+      var resto = parseNum(restoRaw) / 100;
       if (!nom) { toast('Escribe el nombre del banco'); return; }
       if (!tasaRaw || !(tasa >= 0)) { toast('Escribe la tasa anual'); return; }
+      /* un tope sin la tasa de después dejaría el resto del saldo rindiendo 0%
+         sin que el usuario lo haya querido: es un descuido, no una decisión */
+      if (tope > 0 && !restoRaw) { toast('Falta la tasa de ahí en adelante'); return; }
+      if (tope <= 0) { tope = null; resto = 0; }
       if (c) {
         if (Math.abs(c.tasa - tasa) > 1e-9) { c.historialTasas.unshift({ fecha: hoy(), de: c.tasa, a: tasa }); }
-        c.nombre = nom; c.tasa = tasa; c.tema = t;
+        /* el tope se mueve (el de Openbank cambió durante 2026) y perderlo de vista
+           haría creer que el banco bajó la tasa cuando lo que cambió fue el tramo */
+        if (c.tope !== tope) c.historialTasas.unshift({ fecha: hoy(), campo: 'tope', de: c.tope, a: tope });
+        if (tope && Math.abs((c.tasaResto || 0) - resto) > 1e-9) c.historialTasas.unshift({ fecha: hoy(), campo: 'resto', de: c.tasaResto, a: resto });
+        c.nombre = nom; c.tasa = tasa; c.tema = t; c.tope = tope; c.tasaResto = resto;
         c.requisito = $('f-req').value.trim(); c.retieneISR = $('f-isr').classList.contains('on');
       } else {
         var saldo = parseNum($('f-saldo').value);
         S.cuentas.push({
-          id: uid(), nombre: nom, tema: t, tasa: tasa, retieneISR: $('f-isr').classList.contains('on'),
+          id: uid(), nombre: nom, tema: t, tasa: tasa, tope: tope, tasaResto: resto,
+          retieneISR: $('f-isr').classList.contains('on'),
           requisito: $('f-req').value.trim(), periodicidad: null,
-          saldo: saldo, aportado: saldo, retirado: 0, rendido: 0, vecesRetirado: 0, ajustes: 0,
+          saldo: saldo, aportado: saldo, retirado: 0, rendido: 0, vecesRetirado: 0, ajustes: 0, isrRetenido: 0,
           ultimoDevengo: hoy(), historialTasas: [{ fecha: hoy(), de: null, a: tasa }],
-          conciliaciones: [], periodo: { desde: hoy(), saldoInicio: saldo, devengado: 0 }
+          /* `saldoDias` y `acumulado` faltaban aquí: los reparaba normalizar() al
+             recargar, pero en la sesión del alta la ventana arrancaba incompleta */
+          conciliaciones: [], periodo: { desde: hoy(), saldoInicio: saldo, devengado: 0, saldoDias: 0, acumulado: 0 }
         });
       }
       persist(); cerrar(); render(); toast(c ? 'Cuenta actualizada' : 'Cuenta agregada');
@@ -1213,6 +1721,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   $('d-conc').addEventListener('click', hojaConciliar);
   $('d-edit').addEventListener('click', function () { hojaCuenta(detalleId); });
   $('a-export').addEventListener('click', function () { exportar(); });
+  $('a-isr').addEventListener('click', function () { hojaISR(); });
+  $('a-resumen').addEventListener('click', function () { exportarResumen(); });
   $('a-import').addEventListener('click', function () { $('file-input').click(); });
   $('a-undo').addEventListener('click', function () {
     var previo;
@@ -1271,7 +1781,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       var el = document.querySelector('[data-live="' + c.id + '"]');
       if (!el) return;
       if (vivos[c.id] == null) vivos[c.id] = c.saldo;
-      vivos[c.id] += c.saldo * c.tasa / 365 * frac;
+      /* la animación tiene que crecer al mismo ritmo que el devengo real, o la
+         cifra que ves subir no es la que se va a guardar: neta y con tramos */
+      vivos[c.id] += rendeNeto(c) / 365 * frac;
       el.innerHTML = moneyCents(vivos[c.id]);
     });
     var t = S.cuentas.reduce(function (a, c) { return a + (vivos[c.id] == null ? c.saldo : vivos[c.id]); }, 0);
