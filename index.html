@@ -358,7 +358,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.8';
+  var VERSION = '1.10';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -500,6 +500,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       c.periodo.desde = c.periodo.desde || c.ultimoDevengo;
       c.periodo.saldoInicio = num(c.periodo.saldoInicio, c.saldo);
       c.periodo.devengado = num(c.periodo.devengado);
+      c.periodo.acumulado = num(c.periodo.acumulado);
     });
     o.plazos.forEach(function (p) {
       p.id = p.id || uid(); p.nombre = String(p.nombre == null ? 'Plazo' : p.nombre);
@@ -591,11 +592,14 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     var proyectado = c.saldo;
     var ajuste = saldoReal - proyectado;
     var d = dias(c.periodo.desde, h);
+    /* Interés real de toda la ventana: lo devengado y ajustado ahora, más lo que
+       arrastran las conciliaciones que se hicieron antes de cumplir los siete días. */
+    var real = (c.periodo.acumulado || 0) + c.periodo.devengado + ajuste;
     var obs = null, descartada = false;
     if (d >= 7) {
       var promedio = saldoPromedio(c, saldoReal, d);
       if (promedio > 0) {
-        var t = ((c.periodo.devengado + ajuste) / promedio) * (365 / d);
+        var t = (real / promedio) * (365 / d);
         /* Una tasa fuera de este rango no es una tasa: es un movimiento que se quedó
            sin registrar. Se guarda la conciliación pero no se contamina la medición. */
         if (t > -0.10 && t < 0.60) obs = t; else descartada = true;
@@ -604,7 +608,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     c.conciliaciones.unshift({ fecha: h, saldoReal: saldoReal, proyectado: proyectado, ajuste: ajuste, dias: d, tasaObs: obs });
     c.saldo = saldoReal;
     c.ajustes = (c.ajustes || 0) + ajuste;
-    c.periodo = { desde: h, saldoInicio: saldoReal, devengado: 0, saldoDias: 0 };
+    /* La ventana de medición sólo se reinicia cuando sirvió de algo: o se midió, o
+       salió contaminada. Antes se reiniciaba siempre, así que quien concilia cada
+       pocos días nunca llegaba a los siete y jamás veía la tasa real. */
+    if (obs != null || descartada) c.periodo = { desde: h, saldoInicio: saldoReal, devengado: 0, saldoDias: 0, acumulado: 0 };
+    else { c.periodo.acumulado = real; c.periodo.devengado = 0; }
     S.movimientos.unshift({ id: uid(), tipo: 'conciliacion', cuentaId: c.id, monto: saldoReal, ajuste: ajuste, fecha: h });
     persist();
     return { dias: d, obs: obs, descartada: descartada };
@@ -615,6 +623,29 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     if (!v.length) return null;
     var s = v.reduce(function (a, x) { return a + x.tasaObs; }, 0) / v.length;
     return { tasa: s, n: v.length };
+  }
+
+  var SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+  /* La medición sale de restar dos saldos capturados, y los bancos abonan el interés
+     del fin de semana hasta el lunes o el martes. Ese retraso no estorba mientras sea
+     IGUAL en los dos extremos de la ventana: si los dos caen en el mismo día de la
+     semana se cancela exacto. Por eso la app apunta a múltiplos de siete días y nombra
+     el día, no "faltan N": medido, conciliar a destiempo puede leer 8% donde se paga 13%. */
+  function proximaMedicion(c) {
+    var d = dias(c.periodo.desde, hoy());
+    var faltan = 7 * Math.max(1, Math.ceil(d / 7)) - d;
+    var x = new Date(); x.setDate(x.getDate() + faltan);
+    return { faltan: faltan, dia: SEMANA[x.getDay()], d: d };
+  }
+
+  /* Sin tasa observada hay que decir por qué, y sobre todo cuándo: "concilia para
+     verla" no explicaba ni que hace falta una ventana ni qué día conviene cerrarla. */
+  function notaSinTasa(c) {
+    var u = c.conciliaciones[0];
+    if (u && u.tasaObs == null && u.dias >= 7) return 'la última se descartó';
+    var p = proximaMedicion(c);
+    return p.faltan === 0 ? 'concilia hoy' : p.faltan === 1 ? 'concilia mañana' : 'concilia el ' + p.dia;
   }
 
   /* ---------- respaldo ---------- */
@@ -633,14 +664,23 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
      callada y sin hacer nada. La hoja de compartir de iOS sí funciona y deja
      guardarlo en Archivos o iCloud, así que se intenta primero. */
   function exportar() {
-    var nombre = 'reserva-' + hoy() + '.json';
+    var h = hoy();
+    var nombre = 'reserva-' + h + '.json';
+    /* El archivo se sella con la fecha de HOY antes de serializarlo. Antes se
+       guardaba con la fecha del respaldo anterior, así que al reimportarlo —que es
+       lo que se hace al actualizar la app— el contador de la pantalla retrocedía. */
+    var pre = S.ajustes.ultimoRespaldo, pua = S.updatedAt;
+    S.ajustes.ultimoRespaldo = h; S.updatedAt = new Date().toISOString();
     var texto = JSON.stringify(S, null, 2);
-    function listo() { S.ajustes.ultimoRespaldo = hoy(); persist(); render(); toast('Respaldo guardado'); }
+    S.ajustes.ultimoRespaldo = pre; S.updatedAt = pua;
+    function listo() { S.ajustes.ultimoRespaldo = h; persist(); render(); toast('Respaldo guardado'); }
     try {
       var f = new File([texto], nombre, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [f] })) {
         navigator.share({ files: [f] }).then(listo).catch(function (e) {
-          if (e && e.name === 'AbortError') return;           // lo canceló él, no es un fallo
+          // si cerró la hoja sin guardar no es un fallo, pero hay que decirlo: si no,
+          // el contador se queda quieto sin explicación
+          if (e && e.name === 'AbortError') { toast('No se guardó: la hoja se cerró'); return; }
           descargar(texto, nombre, listo);
         });
         return;
@@ -798,7 +838,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('d-tasa').textContent = pct(c.tasa);
     var o = tasaObservada(c);
     $('d-obs').textContent = o ? pct(o.tasa) : '—';
-    $('d-obs-note').textContent = o ? 'estimada · ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : 'concilia para verla';
+    $('d-obs-note').textContent = o ? 'estimada · ' + o.n + (o.n === 1 ? ' medición' : ' mediciones') : notaSinTasa(c);
     $('d-ap').textContent = money(c.aportado);
     $('d-re').textContent = money(c.retirado);
     $('d-rd').textContent = '+' + money(c.rendido);
@@ -933,7 +973,14 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<div class="diffbox"><div><span>Saldo proyectado</span><b class="num">' + moneySmart(c.saldo) + '</b></div>' +
       '<div><span>Diferencia</span><b class="num" id="dif">$0</b></div>' +
       '<div><span>Periodo</span><b>' + (d === 0 ? 'Hoy mismo' : d === 1 ? 'Un día' : d + ' días') + '</b></div></div>' +
-      (d < 7 ? '<div class="quiet">Aún no sale la tasa real: hacen falta al menos siete días desde la conciliación anterior. El saldo sí se corrige.</div>' : '') +
+      (function () {
+        var p = proximaMedicion(c);
+        if (!p.faltan) return '';   // hoy es el día limpio: no hay nada que advertir
+        return '<div class="quiet">' + (d < 7
+          ? 'La tasa real todavía no sale: se mide en semanas completas y la próxima cae el ' + p.dia + '.'
+          : 'Hoy la medición cae a media semana y sale menos exacta; el ' + p.dia + ' queda limpia.') +
+          ' El saldo se corrige igual y la ventana no se reinicia.</div>';
+      })() +
       '<div class="entry"><div class="v num" id="val"><span class="sym">$</span>0</div>' +
       '<div class="hint">Captura el saldo exacto que ves en el banco, con centavos</div></div>' +
       /* El teclado nunca se saca del documento, sólo se esconde: así conserva lo
@@ -1124,6 +1171,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     );
     $('no').addEventListener('click', cerrar);
     $('ok').addEventListener('click', function () {
+      /* Un archivo que existe ES un respaldo: su fecha cuenta aunque venga de una
+         versión que no la sellaba. Sin esto el contador retrocedía al importar. */
+      var fa = String(datos.updatedAt || '').slice(0, 10);
+      if (!datos.ajustes || typeof datos.ajustes !== 'object') datos.ajustes = {};
+      if (fa && !(datos.ajustes.ultimoRespaldo >= fa)) datos.ajustes.ultimoRespaldo = fa;
       var salvado = (S.cuentas.length || S.movimientos.length) ? guardarPrevio() : true;
       S = normalizar(datos) || vacio();
       detalleId = null; persist(); devengar(); cerrar(); go('home'); render();
