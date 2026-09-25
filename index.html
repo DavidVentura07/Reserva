@@ -54,8 +54,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .view.flush{padding:0 0 calc(84px + var(--safe-bot))}
 
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:10px}
-.date{font-size:13px;color:var(--mut);font-weight:500}
-.ver{display:block;font-style:normal;font-size:10px;color:#AFAFB5;font-weight:500;margin-top:2px;letter-spacing:.2px}
+.date{font-size:13px;color:var(--mut);font-weight:500;white-space:nowrap}
+/* La versión va en el mismo renglón que la fecha: debajo la volvía más alta que la
+   pastilla de respaldo y descuadraba la cabecera. Cabe porque el día de la semana
+   va abreviado; completo, un «Miércoles 30 de septiembre» se pasaba 20 px. */
+.ver{display:inline;font-style:normal;font-size:10px;color:#AFAFB5;font-weight:500;margin-left:7px;letter-spacing:.2px}
 .h-title{font-size:20px;font-weight:600;letter-spacing:-.5px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--mut);border:0;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .chip.alert{background:var(--warnbg);color:var(--warn)}
@@ -88,6 +91,27 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .bank .bal .cts{font-size:.55em;font-weight:600;opacity:.75}
 .bank .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.94);gap:10px}
 .bank .foot span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Selector lista/cuadros, en el renglón de «A la vista». */
+.eyebrow.vista{align-items:center}
+.eyebrow .rt{display:flex;align-items:center;gap:10px}
+.vt{display:flex;background:var(--soft);border-radius:999px;padding:2px}
+.vt button{border:0;background:none;width:32px;height:24px;border-radius:999px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9A9AA0;padding:0}
+.vt button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(26,26,28,.1)}
+.vt svg{width:14px;height:14px;fill:currentColor}
+/* Los cuadros van de dos en dos: a tres por renglón cada uno mide 111 px, el
+   nombre se trunca y un saldo de seis cifras ya no cabe. El pie conserva el
+   estado del tope, que es lo que más se consulta de la tarjeta; el requisito se
+   queda sólo en la ficha. */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tile{border:0;color:#fff;text-align:left;cursor:pointer;border-radius:20px;padding:13px 14px 12px;box-shadow:var(--shadow);min-width:0;display:block;transition:transform .16s ease}
+.tile:active{transform:scale(.97)}
+.tile .tt{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.tile .nm{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tile .tg{font-size:10.5px;font-weight:600;background:rgba(255,255,255,.22);padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
+.tile .bal{font-size:20px;font-weight:700;letter-spacing:-.5px;line-height:1;margin-top:15px;white-space:nowrap}
+.tile .bal .cts{font-size:.55em;font-weight:600;opacity:.75}
+.tile .ft{font-size:11px;font-weight:500;color:rgba(255,255,255,.92);margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .row-card{width:100%;border:0;text-align:left;cursor:pointer;background:var(--card);border-radius:24px;padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;margin-bottom:12px}
 .mark{width:38px;height:38px;border-radius:12px;flex:none}
@@ -154,7 +178,17 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .mv .am.neg{color:var(--neg)}
 .mv .am.zero{color:var(--mut);font-weight:600}
 
-.fab{position:absolute;right:20px;bottom:calc(70px + var(--safe-bot));height:52px;padding:0 22px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:600;cursor:pointer;z-index:6;display:flex;align-items:center;gap:8px;box-shadow:0 12px 26px rgba(26,26,28,.28)}
+/* Movimiento y Conciliar, debajo del tramo. Sustituyen al botón flotante —que
+   tapaba los cuadros de Aportado y Rendido— y al botón largo de conciliar, que
+   quedaba escondido detrás de la barra de pestañas. Tienen forma de pastilla como
+   «Resumen / Movimientos» pero se ven como botones: copiadas tal cual, con fondo
+   gris y una «encendida», no se distinguía cuál cambia de pestaña y cuál actúa. */
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.acts button{height:46px;border:0;border-radius:999px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .12s}
+.acts button:active{transform:scale(.97)}
+.acts .p{background:var(--ink);color:#fff;box-shadow:0 8px 18px rgba(26,26,28,.16)}
+.acts .s{background:#fff;color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line)}
+.acts svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 .empty{text-align:center;padding:60px 8px 0}
 .empty .mk{width:64px;height:64px;display:block;margin:0 auto 24px}
@@ -193,8 +227,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .trrow .fld{margin-bottom:0}
 .trrow .fld.a{flex:1.5}
 .trrow .fld.b{flex:1}
-.swatches{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
-.sw{width:42px;height:42px;border-radius:14px;border:3px solid transparent;cursor:pointer;padding:0}
+/* Ocho colores en un solo renglón: a 42 px fijos el octavo caía solo abajo. */
+.swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin-bottom:6px}
+.sw{width:100%;aspect-ratio:1;border-radius:13px;border:3px solid transparent;cursor:pointer;padding:0}
 .sw.on{border-color:var(--ink)}
 .switch{display:flex;align-items:center;justify-content:space-between;background:var(--soft);border-radius:16px;padding:13px 15px;margin-bottom:10px;font-size:14.5px;font-weight:500}
 .switch button{border:0;background:#D8D8DC;width:48px;height:28px;border-radius:999px;position:relative;cursor:pointer;transition:background .18s}
@@ -270,7 +305,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       <div class="sub num" id="hero-sub"></div>
       <div id="hero-mezcla"></div>
     </div>
-    <div class="eyebrow"><b>A la vista</b><span id="count-vista"></span></div>
+    <div class="eyebrow vista"><b>A la vista</b><span class="rt"><span id="count-vista"></span>
+      <span class="vt" id="vista-toggle">
+        <button data-vista="lista" aria-label="Ver como tarjetas"><svg viewBox="0 0 14 14"><rect x="1" y="1.5" width="12" height="4.6" rx="1.6"/><rect x="1" y="7.9" width="12" height="4.6" rx="1.6"/></svg></button>
+        <button data-vista="cuadros" aria-label="Ver como cuadros"><svg viewBox="0 0 14 14"><rect x="1" y="1" width="5.4" height="5.4" rx="1.5"/><rect x="7.6" y="1" width="5.4" height="5.4" rx="1.5"/><rect x="1" y="7.6" width="5.4" height="5.4" rx="1.5"/><rect x="7.6" y="7.6" width="5.4" height="5.4" rx="1.5"/></svg></button>
+      </span></span></div>
     <div id="list-vista"></div>
     <div id="plazo-block" class="hide">
       <div class="eyebrow" style="margin-top:26px"><b>A plazo</b><span>No disponible hoy</span></div>
@@ -294,8 +333,14 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     </div>
     <div style="padding:0 20px">
       <div class="seg" id="dseg"><button class="on">Resumen</button><button>Movimientos</button></div>
+      <!-- El tramo va fuera de #d-resumen para que los botones queden justo debajo
+           de él y, en la pestaña Movimientos, justo debajo del selector. -->
+      <div id="d-tramo"></div>
+      <div class="acts">
+        <button class="p" data-sheet="mov"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Movimiento</button>
+        <button class="s" id="d-conc"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></svg>Conciliar</button>
+      </div>
       <div id="d-resumen">
-        <div id="d-tramo"></div>
         <div class="infoline" id="d-info"></div>
         <div class="grid">
           <div class="cell"><span>Aportado</span><b class="num" id="d-ap">$0</b></div>
@@ -303,11 +348,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
           <div class="cell"><span>Rendido</span><b class="num pos" id="d-rd">$0</b></div>
           <div class="cell"><span>Veces retirado</span><b class="num" id="d-vr">0</b></div>
         </div>
-        <button class="act" id="d-conc">
-          <span class="ic"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></svg></span>
-          <span class="g"><b>Conciliar saldo</b><span id="d-conc-sub">Nunca conciliada</span></span>
-          <span class="arw">›</span>
-        </button>
         <div class="note hide" id="d-req">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
           <div><b>Requisito de la cuenta</b><p id="d-req-tx"></p></div>
@@ -387,7 +427,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     <button class="tab" data-go="ajustes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>Ajustes</button>
   </nav>
 
-  <button class="fab hide" id="fab" data-sheet="mov">＋ Movimiento</button>
   <div class="toast" id="toast"></div>
 
   <div class="backdrop" id="bd"><div class="sheet" id="sheet"></div></div>
@@ -401,7 +440,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.12';
+  var VERSION = '1.13';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -429,7 +468,13 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     { id: 'verde', a: '#12A594', b: '#0B7365' },
     { id: 'azul', a: '#3B82F6', b: '#1D4ED8' },
     { id: 'rosa', a: '#EC4899', b: '#BE185D' },
-    { id: 'pizarra', a: '#3B4A63', b: '#1E2939' }
+    { id: 'pizarra', a: '#3B4A63', b: '#1E2939' },
+    /* v1.13: dos más para no repetir color. Se eligieron entre seis candidatos viéndolos
+       junto a los de arriba: índigo se confundía con violeta y cielo con azul; oliva y
+       arena eran tonos terrosos que no casaban con una paleta de colores intensos.
+       El vino no es rojo de alarma a propósito: el rojo ya significa monto negativo. */
+    { id: 'vino', a: '#B0304A', b: '#7A1631' },
+    { id: 'bosque', a: '#3E8E4F', b: '#1F5F33' }
   ];
   function temaObj(id) { for (var i = 0; i < TEMAS.length; i++) if (TEMAS[i].id === id) return TEMAS[i]; return TEMAS[0]; }
   function tema(id) { var t = temaObj(id); return 'linear-gradient(135deg,' + t.a + ',' + t.b + ')'; }
@@ -528,6 +573,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
        cambia cada año (era 0.50% en 2025), y global porque le pega igual a todos
        los bancos: lo que cambia el orden entre ellos es que uno retenga y otro no. */
     if (o.ajustes.isr === undefined) o.ajustes.isr = 0.009;
+    /* v1.13: la pantalla principal recuerda si se dejó en tarjetas o en cuadros */
+    o.ajustes.cuadros = !!o.ajustes.cuadros;
     o.ajustes.isr = num(o.ajustes.isr);
     ['cuentas', 'plazos', 'movimientos'].forEach(function (k) { if (!Array.isArray(o[k])) o[k] = []; });
     o.cuentas.forEach(function (c) {
@@ -1072,7 +1119,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     var cd = (v === 'detail' && detalleId) ? cuenta(detalleId) : null;
     pintarBarraSistema(cd ? temaBarra(cd.tema) : '#F8F9FA');
     for (var k in vistas) $(vistas[k]).classList.toggle('on', k === v);
-    $('fab').classList.toggle('hide', v !== 'detail');
     $('tabs').classList.toggle('hide', v === 'empty');
     var map = { home: 0, plazos: 1, movs: 2, ajustes: 3 };
     var tabs = document.querySelectorAll('.tab');
@@ -1107,7 +1153,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     /* si veníamos de la pantalla de bienvenida hay que cambiar de vista de verdad, no solo la variable */
     if (actual === 'empty') go('home');
 
-    var d = new Date(), sem = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][d.getDay()];
+    /* abreviado para que la versión quepa en el mismo renglón que la fecha */
+    var d = new Date(), sem = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()];
     $('today').textContent = sem + ' ' + fechaLarga(hoy());
 
     var ur = S.ajustes.ultimoRespaldo, chip = $('backup-chip');
@@ -1137,7 +1184,11 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
     $('count-vista').textContent = S.cuentas.length + (S.cuentas.length === 1 ? ' cuenta' : ' cuentas');
 
-    $('list-vista').innerHTML = S.cuentas.length ? S.cuentas.map(function (c) {
+    var cuadros = !!S.ajustes.cuadros;
+    [].forEach.call($('vista-toggle').children, function (b) { b.classList.toggle('on', (b.dataset.vista === 'cuadros') === cuadros); });
+    $('list-vista').innerHTML = !S.cuentas.length ? '<div class="small-empty">Todavía no has agregado ninguna cuenta a la vista.</div>'
+      : cuadros ? '<div class="tiles">' + S.cuentas.map(function (c) { return cuadro(c, tap); }).join('') + '</div>'
+      : S.cuentas.map(function (c) {
       return '<button class="bank" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
         /* con tramos la tasa del cartel describe sólo los primeros miles, así que
            la tarjeta enseña la efectiva; sin tope las dos son la misma cifra y se
@@ -1147,7 +1198,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
         '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(6, '8px', '6px', '7px') : moneyCents(c.saldo)) + '</div>' +
         '<div class="foot"><span>' + pieTarjeta(c, tap) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
         '</button>';
-    }).join('') : '<div class="small-empty">Todavía no has agregado ninguna cuenta a la vista.</div>';
+    }).join('');
 
     $('plazo-block').classList.toggle('hide', !S.plazos.length);
     $('list-plazo-home').innerHTML = S.plazos.map(function (p) { return filaPlazo(p, tap); }).join('');
@@ -1184,6 +1235,19 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     if (!tieneTope(c)) return 'Rendido ' + (tap ? pts(4, '4px', '3px') : money(rendidoNeto(c)));
     if (sobrante(c) > 0) return 'Tope alcanzado · resto al ' + pct(c.tasaResto);
     return 'Caben ' + (tap ? pts(4, '4px', '3px') : money(espacio(c))) + ' al ' + pct(c.tasa);
+  }
+
+  /* El cuadro: la misma tarjeta a media anchura. La etiqueta lleva sólo el
+     porcentaje (con «efectiva» no cabe) y el pie dice lo mismo que la tarjeta pero
+     corto. `data-live` hace que el rendimiento en vivo también lo anime. */
+  function cuadro(c, tap) {
+    var ft = !tieneTope(c) ? 'Rendido ' + (tap ? pts(4, '4px', '3px') : money(rendidoNeto(c)))
+      : sobrante(c) > 0 ? 'Tope alcanzado'
+      : 'Caben ' + (tap ? pts(4, '4px', '3px') : money(espacio(c)));
+    return '<button class="tile" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
+      '<div class="tt"><span class="nm">' + esc(c.nombre) + '</span><span class="tg">' + pct(tieneTope(c) ? efectiva(c) : c.tasa) + '</span></div>' +
+      '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(5, '6px', '5px', '6px') : moneyCents(c.saldo)) + '</div>' +
+      '<div class="ft">' + ft + '</div></button>';
   }
 
   /* `tap` sólo lo manda la pantalla principal: la pestaña de Plazos siempre
@@ -1286,9 +1350,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       : 'tasa sin cambios desde el alta');
     $('d-info').textContent = info.join(' · ');
 
-    var uc = c.conciliaciones[0], ud = uc ? dias(uc.fecha, hoy()) : null;
-    $('d-conc-sub').textContent = !uc ? 'Nunca conciliada'
-      : ud === 0 ? 'Conciliada hoy' : ud === 1 ? 'Última hace un día' : 'Última hace ' + ud + ' días';
     $('d-req').classList.toggle('hide', !c.requisito);
     $('d-req-tx').textContent = c.requisito || '';
     var ms = S.movimientos.filter(function (m) { return m.cuentaId === c.id || m.destinoId === c.id; });
@@ -1484,7 +1545,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 
   function hojaCuenta(id) {
     var c = id ? cuenta(id) : null;
-    var t = c ? c.tema : TEMAS[0].id;
+    /* al dar de alta se propone el primer color que no use ninguna cuenta */
+    var libre = TEMAS.filter(function (x) { return !S.cuentas.some(function (k) { return k.tema === x.id; }); })[0];
+    var t = c ? c.tema : (libre || TEMAS[0]).id;
     abrir(
       '<h3>' + (c ? 'Editar cuenta' : 'Nueva cuenta') + '</h3>' +
       '<span class="lb">Nombre del banco</span><input class="fld" id="f-nom" placeholder="Nu, Openbank, Mifel…" value="' + esc(c ? c.nombre : '') + '">' +
@@ -1716,9 +1779,16 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     var r = b.textContent === 'Resumen';
     [].forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
     $('d-resumen').classList.toggle('hide', !r);
+    $('d-tramo').classList.toggle('hide', !r);
     $('d-movs').classList.toggle('hide', r);
   });
   $('d-conc').addEventListener('click', hojaConciliar);
+  $('vista-toggle').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var q = b.dataset.vista === 'cuadros';
+    if (q === !!S.ajustes.cuadros) return;
+    S.ajustes.cuadros = q; persist(); render();
+  });
   $('d-edit').addEventListener('click', function () { hojaCuenta(detalleId); });
   $('a-export').addEventListener('click', function () { exportar(); });
   $('a-isr').addEventListener('click', function () { hojaISR(); });
