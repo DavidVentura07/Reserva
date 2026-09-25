@@ -89,7 +89,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .tag{font-size:11.5px;font-weight:600;background:rgba(255,255,255,.22);padding:4px 10px;border-radius:999px;white-space:nowrap}
 .bank .bal{font-size:26px;font-weight:700;letter-spacing:-.7px;line-height:1}
 .bank .bal .cts{font-size:.55em;font-weight:600;opacity:.75}
-.bank .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.94);gap:10px}
+.bank .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.94);gap:10px;min-height:19px}
 .bank .foot span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Selector lista/cuadros, en el renglón de «A la vista». */
@@ -271,6 +271,43 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
 .tramo .sobra{font-size:12.5px;font-weight:500;line-height:1.55;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--warn)}
 .tramo .cabe{font-size:12.5px;font-weight:500;line-height:1.55;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--mut)}
 .tramo .cabe b,.tramo .sobra b{font-weight:700}
+
+/* Requisitos para conservar la sobretasa (v1.14). Cada uno es MENSUAL —se vacía
+   solo el día 1, porque el banco lo pide cada mes calendario— o DE UNA SOLA VEZ,
+   como dar de alta la tarjeta en Apple Wallet, que se queda marcado pero a la vista.
+   Un toque marca la fecha de hoy; «cambiar» corrige el día. Sin rachas, sin puntos
+   y sin notificaciones: sólo el estado. Una palomita sin mes mentiría el día 1. */
+.req{background:var(--card);border-radius:24px;padding:16px 18px 6px;box-shadow:var(--shadow);margin-bottom:14px}
+.req .rh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px}
+.req .rh b{font-size:14px;font-weight:600}
+.req .rh span{font-size:12.5px;font-weight:500;color:var(--mut);white-space:nowrap}
+.req .rh .ok{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:#E9F7EE;color:var(--pos);letter-spacing:.3px}
+.ri{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer}
+.ri+.ri{border-top:1px solid var(--line)}
+.ck{width:24px;height:24px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 2px #C9CACD;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.ck svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none}
+.ck.on{background:var(--pos);box-shadow:none}
+.ck.on svg{display:block}
+.ri .g{flex:1;min-width:0}
+.ri .g b{display:block;font-size:14px;font-weight:600}
+.ri .g b em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--mut);background:var(--soft);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.ri .g span{font-size:12px;color:var(--mut);font-weight:500}
+.ri .g span.hecho{color:var(--pos)}
+/* el selector de fecha va encima del enlace, invisible: en el iPhone tocar un
+   <input type="date"> abre directo la rueda de fechas, sin pasos intermedios */
+.cambiar{position:relative;color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.cambiar input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;margin:0;cursor:pointer}
+/* en la tarjeta de la pantalla principal: el estado en lugar del texto del requisito */
+.rq{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);color:var(--ink);font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;line-height:1.35}
+.rq i{width:6px;height:6px;border-radius:50%;background:var(--warn);display:block}
+.pto{width:7px;height:7px;border-radius:50%;background:#fff;flex:none;display:inline-block;margin-right:6px;vertical-align:1px}
+/* la lista de requisitos en la hoja de la cuenta */
+.reqrow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.reqrow .fld{margin:0;flex:1;min-width:0}
+.frec{flex:none;width:84px;border:0;background:var(--soft);border-radius:999px;padding:13px 0;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer}
+.frec.vez{color:var(--mut)}
+.reqrow .del{flex:none;width:30px;height:36px;border:0;background:none;color:#A0A0A6;font-size:22px;line-height:1;cursor:pointer;padding:0}
+.addreq{border:0;background:none;color:var(--ink);font-size:13.5px;font-weight:600;padding:2px 2px 8px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -341,16 +378,13 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
         <button class="s" id="d-conc"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></svg>Conciliar</button>
       </div>
       <div id="d-resumen">
+        <div id="d-reqs"></div>
         <div class="infoline" id="d-info"></div>
         <div class="grid">
           <div class="cell"><span>Aportado</span><b class="num" id="d-ap">$0</b></div>
           <div class="cell"><span>Retirado</span><b class="num" id="d-re">$0</b></div>
           <div class="cell"><span>Rendido</span><b class="num pos" id="d-rd">$0</b></div>
           <div class="cell"><span>Veces retirado</span><b class="num" id="d-vr">0</b></div>
-        </div>
-        <div class="note hide" id="d-req">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          <div><b>Requisito de la cuenta</b><p id="d-req-tx"></p></div>
         </div>
       </div>
       <div id="d-movs" class="hide"></div>
@@ -407,7 +441,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     <div id="a-list"></div>
     <button class="act" data-sheet="cuenta">
       <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
-      <span class="g"><b>Agregar un banco</b><span>Nombre, color, tasa y requisito</span></span><span class="arw">›</span>
+      <span class="g"><b>Agregar un banco</b><span>Nombre, color, tasa y requisitos</span></span><span class="arw">›</span>
     </button>
     <div class="eyebrow" style="margin-top:22px"><b>Preferencias</b><span></span></div>
     <button class="act" id="a-isr">
@@ -440,7 +474,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.13';
+  var VERSION = '1.14';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -591,7 +625,20 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       c.rendido = num(c.rendido); c.ajustes = num(c.ajustes); c.isrRetenido = num(c.isrRetenido);
       c.vecesRetirado = Math.max(0, Math.round(num(c.vecesRetirado)));
       c.retieneISR = !!c.retieneISR;
-      c.requisito = c.requisito == null ? '' : String(c.requisito);
+      /* v1.14: el requisito deja de ser un texto libre y pasa a ser una lista con
+         estado. El texto viejo entra como un requisito mensual, que es lo que eran
+         casi todos («una compra al mes»). `periodicidad` se había dejado preparado
+         para esto y nunca se usó: lo sustituye `mensual` en cada requisito. */
+      if (!Array.isArray(c.requisitos)) {
+        var viejo = c.requisito == null ? '' : String(c.requisito).trim();
+        c.requisitos = viejo ? [{ id: uid(), texto: viejo, mensual: true, fechas: [] }] : [];
+      }
+      delete c.requisito; delete c.periodicidad;
+      c.requisitos = c.requisitos.filter(function (r) { return r && String(r.texto == null ? '' : r.texto).trim(); });
+      c.requisitos.forEach(function (r) {
+        r.id = r.id || uid(); r.texto = String(r.texto).trim(); r.mensual = r.mensual !== false;
+        r.fechas = Array.isArray(r.fechas) ? r.fechas.filter(function (x) { return /^\d{4}-\d{2}-\d{2}$/.test(x); }).sort() : [];
+      });
       if (!Array.isArray(c.historialTasas)) c.historialTasas = [];
       if (!Array.isArray(c.conciliaciones)) c.conciliaciones = [];
       if (!c.ultimoDevengo) c.ultimoDevengo = hoy();
@@ -820,6 +867,31 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   }
 
   var SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  /* ---------- requisitos del mes ----------
+     `fechas` guarda cada vez que se cumplió y nunca se borra al cambiar de mes: el
+     estado se deduce de la fecha. Un requisito mensual cuenta como cumplido sólo si
+     tiene una fecha dentro del mes calendario en curso; así el día 1 vuelve a quedar
+     pendiente sin que nada tenga que «reiniciarlo». Uno de una sola vez cuenta con
+     cualquier fecha. */
+  function fechaVigente(r) {
+    var m = hoy().slice(0, 7);
+    var l = r.fechas.filter(function (f) { return !r.mensual || f.slice(0, 7) === m; });
+    return l.length ? l[l.length - 1] : null;
+  }
+  function reqPendientes(c) { return c.requisitos.filter(function (r) { return !fechaVigente(r); }); }
+  function marcarReq(r, f) {
+    /* un mensual guarda una fecha por mes; uno de una vez, una sola fecha */
+    r.fechas = r.fechas.filter(function (x) { return r.mensual && x.slice(0, 7) !== f.slice(0, 7); });
+    r.fechas.push(f); r.fechas.sort();
+  }
+  function desmarcarReq(r) { var v = fechaVigente(r); r.fechas = r.fechas.filter(function (x) { return x !== v; }); }
+  function cierreMes() {
+    var d = new Date(), n = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate();
+    return n === 0 ? 'cierra hoy' : n === 1 ? 'cierra mañana' : 'cierra en ' + n + ' días';
+  }
+  function fechaCorta(iso) { var d = new Date(iso + 'T00:00:00'); return d.getDate() + ' ' + MESES[d.getMonth()].slice(0, 3); }
 
   /* La medición sale de restar dos saldos capturados, y los bancos abonan el interés
      del fin de semana hasta el lunes o el martes. Ese retraso no estorba mientras sea
@@ -938,6 +1010,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     A("- **El saldo proyectado crece con la tasa NETA** (tramos e ISR ya aplicados). `rendido` guarda el interés bruto acumulado e `isrRetenido` la retención acumulada, por separado, de modo que `saldo = aportado − retirado + rendido − isrRetenido + ajustes`.");
     A("- **Tasa real observada** es la que se deduce de las conciliaciones: interés real del periodo dividido entre el saldo promedio ponderado por tiempo, anualizado. Pide una ventana de al menos 7 días y promedia las últimas 3 mediciones. Como el saldo que reporta el banco ya viene neto, la observada es neta — y por tanto **se compara directamente contra la efectiva neta**, no contra la tasa del cartel.");
     A("- **Ahí está la auditoría, y es lo más útil que hay aquí:** si la efectiva neta calculada y la observada se separan mucho, lo capturado no describe al banco. Lo más probable es que el `tope` esté mal o que el banco lo haya movido sin avisar; también puede ser un movimiento sin registrar o que el banco sí retenga ISR aunque esté marcado como que no. Un `ajustes` acumulado grande y negativo es la huella de lo mismo.");
+    A("- **Requisitos para conservar la tasa.** Los bancos pagan la tasa alta sólo si se cumple algo cada mes calendario (casi siempre una compra con la tarjeta); algunos requisitos son de una sola vez. La app guarda la fecha de cada cumplimiento. Un mes sin cumplir suele significar que el banco pagó la tasa base ese mes aunque la app haya seguido proyectando la alta: es una causa probable de un ajuste negativo o de una tasa observada baja en ese periodo.");
     A("- **Los plazos (CETES, pagarés) nunca cuentan como disponible.** Tienen tasa fija conocida al contratar, no se devengan a diario ni se concilian.");
     A("- **Un traspaso entre cuentas no es aportación ni retiro.** No toca `aportado`, `retirado` ni `vecesRetirado`, a propósito: mover dinero persiguiendo mejor tasa no debe ensuciar la métrica de cuántas veces se ha tocado el fondo.");
     A("- Las mediciones más limpias salen cuando dos conciliaciones caen en el **mismo día de la semana**: los bancos abonan el interés del fin de semana hasta el lunes o el martes, y ese retraso sólo se cancela si es igual en los dos extremos de la ventana. Fuera de ritmo, una medición suelta puede leer 8% donde se paga 13%.");
@@ -992,7 +1065,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
          del cartel se restaría una bruta de una neta y siempre saldría brecha */
       if (o) A('| Brecha medida − calculada neta | ' + pp(o.tasa - efectivaNeta(c)) + ' |');
       A('| Retención de ISR | ' + (c.retieneISR ? 'sí, ' + pct2(S.ajustes.isr) + ' anual sobre el capital' : 'no marcada') + ' |');
-      A('| Requisito para conservar la tasa | ' + (c.requisito || '—') + ' |');
+      A('| Requisitos para conservar la tasa | ' + (c.requisitos.length ? c.requisitos.map(function (r) {
+        var f = fechaVigente(r);
+        return r.texto.replace(/\|/g, '/') + ' (' + (r.mensual ? 'cada mes' : 'una sola vez') + '; ' + (f ? 'cumplido el ' + f : 'pendiente') + ')';
+      }).join('; ') : '—') + ' |');
       A('| Aportado | ' + m2(c.aportado) + ' |');
       A('| Retirado | ' + m2(c.retirado) + ' en ' + c.vecesRetirado + (c.vecesRetirado === 1 ? ' retiro' : ' retiros') + ' |');
       A('| Rendido (bruto) | ' + m2(c.rendido) + ' |');
@@ -1012,6 +1088,12 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
           if (x.campo === 'resto') return x.fecha + ': tasa del resto ' + pct2(x.de) + ' → ' + pct2(x.a);
           if (x.de == null) return x.fecha + ': alta con ' + pct2(x.a);
           return x.fecha + ': tasa ' + pct2(x.de) + ' → ' + pct2(x.a);
+        }).join(' · '));
+        A('');
+      }
+      if (c.requisitos.some(function (r) { return r.fechas.length; })) {
+        A('Requisitos cumplidos: ' + c.requisitos.map(function (r) {
+          return r.texto + ' — ' + (r.fechas.length ? r.fechas.join(', ') : 'nunca');
         }).join(' · '));
         A('');
       }
@@ -1196,7 +1278,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
         '<div class="top"><span class="nm">' + esc(c.nombre) + '</span><span class="tag">' +
           (tieneTope(c) ? pct(efectiva(c)) + ' efectiva' : pct(c.tasa) + ' tasa') + '</span></div>' +
         '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(6, '8px', '6px', '7px') : moneyCents(c.saldo)) + '</div>' +
-        '<div class="foot"><span>' + pieTarjeta(c, tap) + '</span><span>' + esc(c.requisito || 'Sin requisitos') + '</span></div>' +
+        '<div class="foot"><span>' + pieTarjeta(c, tap) + '</span><span>' + pieReq(c) + '</span></div>' +
         '</button>';
     }).join('');
 
@@ -1231,6 +1313,16 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* El pie de la tarjeta dice lo más accionable que haya: si el banco tiene tope,
      cuánto falta para llenarlo o que ya se pasó; si no, lo rendido de siempre.
      Las cifras en pesos se tapan; los porcentajes no, no filtran el saldo. */
+  /* El lado derecho del pie decía el texto del requisito; desde la v1.14 dice su
+     estado. Es el recordatorio de la pantalla principal: no agrega ningún elemento,
+     vive en el banco al que pertenece y desaparece solo al cumplir. */
+  function pieReq(c) {
+    if (!c.requisitos.length) return 'Sin requisitos';
+    var p = reqPendientes(c).length, n = c.requisitos.length;
+    if (p) return '<span class="rq"><i></i>' + (n > 1 ? 'Falta ' + p + ' de ' + n : 'Falta requisito') + '</span>';
+    return '✓ Cumplido ' + fechaCorta(c.requisitos.map(fechaVigente).sort().pop());
+  }
+
   function pieTarjeta(c, tap) {
     if (!tieneTope(c)) return 'Rendido ' + (tap ? pts(4, '4px', '3px') : money(rendidoNeto(c)));
     if (sobrante(c) > 0) return 'Tope alcanzado · resto al ' + pct(c.tasaResto);
@@ -1245,7 +1337,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       : sobrante(c) > 0 ? 'Tope alcanzado'
       : 'Caben ' + (tap ? pts(4, '4px', '3px') : money(espacio(c)));
     return '<button class="tile" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
-      '<div class="tt"><span class="nm">' + esc(c.nombre) + '</span><span class="tg">' + pct(tieneTope(c) ? efectiva(c) : c.tasa) + '</span></div>' +
+      '<div class="tt"><span class="nm">' + (reqPendientes(c).length ? '<i class="pto"></i>' : '') + esc(c.nombre) + '</span><span class="tg">' + pct(tieneTope(c) ? efectiva(c) : c.tasa) + '</span></div>' +
       '<div class="bal num" data-live="' + c.id + '">' + (tap ? '$' + pts(5, '6px', '5px', '6px') : moneyCents(c.saldo)) + '</div>' +
       '<div class="ft">' + ft + '</div></button>';
   }
@@ -1320,6 +1412,23 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     return 'En ' + esc(b.c.nombre) + ' ganarían ' + pct(b.tasa) + '.';
   }
 
+  function piezaRequisitos(c) {
+    if (!c.requisitos.length) return '';
+    var falta = reqPendientes(c), h = hoy();
+    var mensual = c.requisitos.some(function (r) { return r.mensual; });
+    var der = !falta.length ? '<span class="ok">AL DÍA</span>'
+      : falta.some(function (r) { return r.mensual; }) ? '<span>' + cierreMes() + '</span>' : '';
+    return '<div class="req"><div class="rh"><b>' + (mensual ? 'Requisitos de ' + MESES[new Date().getMonth()] : 'Requisitos') + '</b>' + der + '</div>' +
+      c.requisitos.map(function (r) {
+        var f = fechaVigente(r);
+        return '<div class="ri" data-req="' + r.id + '"><span class="ck' + (f ? ' on' : '') + '"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+          '<span class="g"><b>' + esc(r.texto) + (r.mensual ? '' : '<em>UNA VEZ</em>') + '</b>' +
+          (f ? '<span class="hecho">' + (r.mensual ? 'Cumplido' : 'Hecho') + ' el ' + fechaLarga(f) + ' · <label class="cambiar">cambiar<input type="date" data-fecha="' + r.id + '" max="' + h + '" value="' + f + '"></label></span>'
+             : '<span>Pendiente</span>') +
+          '</span></div>';
+      }).join('') + '</div>';
+  }
+
   function renderDetalle() {
     var c = cuenta(detalleId); if (!c) { go('home'); return; }
     $('dtop').style.background = temaDetalle(c.tema);
@@ -1350,8 +1459,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       : 'tasa sin cambios desde el alta');
     $('d-info').textContent = info.join(' · ');
 
-    $('d-req').classList.toggle('hide', !c.requisito);
-    $('d-req-tx').textContent = c.requisito || '';
+    $('d-reqs').innerHTML = piezaRequisitos(c);
     var ms = S.movimientos.filter(function (m) { return m.cuentaId === c.id || m.destinoId === c.id; });
     $('d-movs').innerHTML = ms.length ? ms.map(function (m) { return filaMov(m, false); }).join('') : '<div class="small-empty">Sin movimientos en esta cuenta.</div>';
     /* por si se acaba de cambiar el color de la cuenta estando dentro de su ficha */
@@ -1565,12 +1673,45 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
       '<p class="quiet">Déjalo vacío si el banco paga igual sin importar el monto.</p>' +
       (c ? '' : '<span class="lb">Saldo actual</span><input class="fld" id="f-saldo" type="text" inputmode="decimal" autocomplete="off" placeholder="12500.75">') +
       '<div class="diffbox" id="f-previo"></div>' +
-      '<span class="lb">Requisito para conservar la tasa</span><input class="fld" id="f-req" placeholder="Una compra al mes (opcional)" value="' + esc(c ? c.requisito : '') + '">' +
+      '<span class="lb">Requisitos para conservar la tasa</span><div id="f-reqs"></div>' +
+      '<button class="addreq" id="f-addreq" type="button">＋ Agregar requisito</button>' +
       '<div class="switch">Retiene ISR<button id="f-isr" class="' + (!c || c.retieneISR ? 'on' : '') + '"><i></i></button></div>' +
       '<p class="quiet">' + pct(S.ajustes.isr) + ' anual sobre el capital. Se configura una sola vez en Ajustes.</p>' +
       '<button class="primary" id="save">' + (c ? 'Guardar cambios' : 'Agregar cuenta') + '</button>' +
       (c ? '<button class="secondary" id="del" style="color:#BA1A1A">Eliminar cuenta</button>' : '')
     );
+    /* Cada renglón: el texto, si es de cada mes o de una vez, y quitar. El id viaja
+       en el renglón para no perder las fechas ya marcadas al editar el texto. */
+    function filaReq(r) {
+      return '<div class="reqrow" data-id="' + (r ? r.id : '') + '"><input class="fld" placeholder="Una compra al mes (opcional)" value="' + esc(r ? r.texto : '') + '">' +
+        '<button type="button" class="frec' + (r && !r.mensual ? ' vez' : '') + '">' + (r && !r.mensual ? 'Una vez' : 'Cada mes') + '</button>' +
+        '<button type="button" class="del" aria-label="Quitar requisito">×</button></div>';
+    }
+    $('f-reqs').innerHTML = (c && c.requisitos.length ? c.requisitos : [null]).map(filaReq).join('');
+    $('f-reqs').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.classList.contains('frec')) { var v = !b.classList.contains('vez'); b.classList.toggle('vez', v); b.textContent = v ? 'Una vez' : 'Cada mes'; }
+      if (b.classList.contains('del')) {
+        var fila = b.closest('.reqrow');
+        if (this.children.length > 1) fila.remove(); else { fila.querySelector('input').value = ''; fila.dataset.id = ''; }
+      }
+    });
+    $('f-addreq').addEventListener('click', function () {
+      $('f-reqs').insertAdjacentHTML('beforeend', filaReq(null));
+      $('f-reqs').lastElementChild.querySelector('input').focus();
+    });
+    function leerReqs() {
+      var previos = c ? c.requisitos : [];
+      return [].map.call($('f-reqs').children, function (fila) {
+        var texto = fila.querySelector('input').value.trim(); if (!texto) return null;
+        var viejo = previos.filter(function (r) { return r.id === fila.dataset.id; })[0];
+        var mensual = !fila.querySelector('.frec').classList.contains('vez');
+        var fechas = viejo ? viejo.fechas.slice() : [];
+        /* si pasa de mensual a una vez, se queda sólo la última fecha */
+        if (viejo && viejo.mensual && !mensual) fechas = fechas.slice(-1);
+        return { id: viejo ? viejo.id : uid(), texto: texto, mensual: mensual, fechas: fechas };
+      }).filter(Boolean);
+    }
     $('sw').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       t = b.dataset.t;
@@ -1625,13 +1766,13 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
         if (c.tope !== tope) c.historialTasas.unshift({ fecha: hoy(), campo: 'tope', de: c.tope, a: tope });
         if (tope && Math.abs((c.tasaResto || 0) - resto) > 1e-9) c.historialTasas.unshift({ fecha: hoy(), campo: 'resto', de: c.tasaResto, a: resto });
         c.nombre = nom; c.tasa = tasa; c.tema = t; c.tope = tope; c.tasaResto = resto;
-        c.requisito = $('f-req').value.trim(); c.retieneISR = $('f-isr').classList.contains('on');
+        c.requisitos = leerReqs(); c.retieneISR = $('f-isr').classList.contains('on');
       } else {
         var saldo = parseNum($('f-saldo').value);
         S.cuentas.push({
           id: uid(), nombre: nom, tema: t, tasa: tasa, tope: tope, tasaResto: resto,
           retieneISR: $('f-isr').classList.contains('on'),
-          requisito: $('f-req').value.trim(), periodicidad: null,
+          requisitos: leerReqs(),
           saldo: saldo, aportado: saldo, retirado: 0, rendido: 0, vecesRetirado: 0, ajustes: 0, isrRetenido: 0,
           ultimoDevengo: hoy(), historialTasas: [{ fecha: hoy(), de: null, a: tasa }],
           /* `saldoDias` y `acumulado` faltaban aquí: los reparaba normalizar() al
@@ -1783,6 +1924,24 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('d-movs').classList.toggle('hide', r);
   });
   $('d-conc').addEventListener('click', hojaConciliar);
+  /* un toque en el requisito lo marca con la fecha de hoy; otro toque lo desmarca */
+  function reqDe(id) { var c = cuenta(detalleId); return c ? c.requisitos.filter(function (r) { return r.id === id; })[0] : null; }
+  $('d-reqs').addEventListener('click', function (e) {
+    var inp = e.target.closest('.cambiar input');
+    if (inp) { try { if (inp.showPicker) inp.showPicker(); } catch (x) { } return; }
+    if (e.target.closest('.cambiar')) return;
+    var fila = e.target.closest('[data-req]'); if (!fila) return;
+    var r = reqDe(fila.dataset.req); if (!r) return;
+    if (fechaVigente(r)) desmarcarReq(r); else marcarReq(r, hoy());
+    persist(); render();
+  });
+  $('d-reqs').addEventListener('change', function (e) {
+    var inp = e.target.closest('input[data-fecha]'); if (!inp || !inp.value) return;
+    if (inp.value > hoy()) { toast('Esa fecha todavía no llega'); render(); return; }
+    var r = reqDe(inp.dataset.fecha); if (!r) return;
+    desmarcarReq(r); marcarReq(r, inp.value);
+    persist(); render();
+  });
   $('vista-toggle').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var q = b.dataset.vista === 'cuadros';
