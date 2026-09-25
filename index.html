@@ -474,7 +474,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
   /* Se muestra en la pantalla principal y en Ajustes para poder confirmar de un
      vistazo que el teléfono ya tiene la versión recién publicada.
      Al cambiarla, subir también la versión de CACHE en sw.js. */
-  var VERSION = '1.14';
+  var VERSION = '1.15';
 
   /* ---------- almacenamiento (con respaldo en memoria si el navegador lo bloquea) ---------- */
   var KEY = 'reserva.v1';
@@ -1267,10 +1267,20 @@ button:focus-visible,input:focus-visible{outline:2px solid #5B21B6;outline-offse
     $('count-vista').textContent = S.cuentas.length + (S.cuentas.length === 1 ? ' cuenta' : ' cuentas');
 
     var cuadros = !!S.ajustes.cuadros;
+    /* v1.15: la pantalla principal ordena los bancos por lo que dejan al mes (saldo por
+       tasa efectiva neta, con tramos e ISR), de mayor a menor. Junta en un número las
+       dos cosas que David pidió, saldo y tasa. Sólo cambia cómo se muestran: S.cuentas
+       conserva el orden de alta, y Ajustes y la hoja de movimientos lo siguen usando.
+       Se calcula en cada render, nunca en tick(), así que el saldo en vivo no hace
+       saltar las tarjetas. Con las cantidades tapadas el orden sí deja ver en qué banco
+       hay más dinero; se le avisó y lo aceptó. */
+    var enOrden = S.cuentas.map(function (c, i) { return { c: c, r: rendeNeto(c), i: i }; })
+      .sort(function (a, b) { return (b.r - a.r) || (b.c.saldo - a.c.saldo) || (a.i - b.i); })
+      .map(function (x) { return x.c; });
     [].forEach.call($('vista-toggle').children, function (b) { b.classList.toggle('on', (b.dataset.vista === 'cuadros') === cuadros); });
     $('list-vista').innerHTML = !S.cuentas.length ? '<div class="small-empty">Todavía no has agregado ninguna cuenta a la vista.</div>'
-      : cuadros ? '<div class="tiles">' + S.cuentas.map(function (c) { return cuadro(c, tap); }).join('') + '</div>'
-      : S.cuentas.map(function (c) {
+      : cuadros ? '<div class="tiles">' + enOrden.map(function (c) { return cuadro(c, tap); }).join('') + '</div>'
+      : enOrden.map(function (c) {
       return '<button class="bank" data-cuenta="' + c.id + '" style="background:' + tema(c.tema) + '">' +
         /* con tramos la tasa del cartel describe sólo los primeros miles, así que
            la tarjeta enseña la efectiva; sin tope las dos son la misma cifra y se

@@ -1,4 +1,4 @@
-const CACHE = 'reserva-1.14';
+const CACHE = 'reserva-1.15';
 
 /* Todo lo que la app necesita para arrancar sin señal. La tipografía ya no viene
    de Google: vive aquí, por eso entra en la caché como un archivo más. */
